@@ -102,11 +102,11 @@ const userSchema = new mongoose.Schema({
       type: Number,
       default: 0,
     },
-    likesGiven: {
+    prayersOffered: {
       type: Number,
       default: 0,
     },
-    likesReceived: {
+    viewsReceived: {
       type: Number,
       default: 0,
     },

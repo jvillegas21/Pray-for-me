@@ -482,10 +482,10 @@ router.get('/me/stats', auth, async (req, res) => {
       },
       {
         $group: {
-          _id: null,
-          totalPrayers: { $sum: 1 },
-          totalLikes: { $sum: '$likesCount' },
-          totalPrayedFor: { $sum: '$prayedForCount' },
+                  _id: null,
+        totalPrayers: { $sum: 1 },
+        totalViews: { $sum: '$viewsCount' },
+        totalPrayedFor: { $sum: '$prayedForCount' },
           answeredPrayers: {
             $sum: {
               $cond: [{ $eq: ['$answered', true] }, 1, 0]
@@ -516,7 +516,7 @@ router.get('/me/stats', auth, async (req, res) => {
 
     const stats = prayerStats[0] || {
       totalPrayers: 0,
-      totalLikes: 0,
+      totalViews: 0,
       totalPrayedFor: 0,
       answeredPrayers: 0
     };
@@ -552,7 +552,7 @@ router.get('/me/stats', auth, async (req, res) => {
 router.get('/leaderboard', [
   query('type')
     .optional()
-    .isIn(['prayers', 'likes', 'helped'])
+    .isIn(['prayers', 'prayers-offered', 'helped'])
     .withMessage('Invalid leaderboard type'),
   query('limit')
     .optional()
@@ -572,8 +572,8 @@ router.get('/leaderboard', [
 
     let sortField;
     switch (type) {
-      case 'likes':
-        sortField = 'stats.likesReceived';
+      case 'prayers-offered':
+        sortField = 'stats.prayersOffered';
         break;
       case 'helped':
         sortField = 'stats.prayersReceived';

@@ -69,6 +69,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/prayers', require('./routes/prayers'));
 app.use('/api/bible', require('./routes/bible'));
 app.use('/api/study', require('./routes/study'));
+app.use('/api/churches', require('./routes/churches'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

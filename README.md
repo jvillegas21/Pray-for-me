@@ -11,9 +11,10 @@ A comprehensive community-based prayer mobile application that connects people t
 - Real-time location-based prayer feeds
 
 ### ❤️ **Community Engagement**
-- Like prayers to show support and increase visibility
-- Comment on prayer requests
-- Track when others pray for your requests
+- **"Pray for this"** button to show you're praying for someone's request
+- **View-based ranking** to surface prayers that resonate with the community
+- Comment on prayer requests with encouragement
+- Track how many people are praying for your requests
 - Friend system for closer prayer partnerships
 
 ### 🤖 **AI-Powered Bible Integration**
@@ -39,6 +40,13 @@ A comprehensive community-based prayer mobile application that connects people t
 - Modern, intuitive UI with smooth animations
 - Offline capability with local storage
 - Push notifications for prayer updates
+
+### ⛪ **Find a Church**
+- Discover nearby churches using location services
+- Filter by denomination and distance
+- View church details, hours, contact information
+- Read reviews and see photos
+- Get directions and contact information
 
 ## 🏗️ Architecture
 
@@ -79,12 +87,11 @@ A comprehensive community-based prayer mobile application that connects people t
 ### Prayers
 - `GET /api/prayers` - Get prayers (with location filtering)
 - `POST /api/prayers` - Create new prayer
-- `GET /api/prayers/:id` - Get specific prayer
+- `GET /api/prayers/:id` - Get specific prayer (tracks view for ranking)
 - `PUT /api/prayers/:id` - Update prayer
-- `POST /api/prayers/:id/like` - Like/unlike prayer
-- `POST /api/prayers/:id/pray` - Mark as prayed for
+- `POST /api/prayers/:id/pray` - Mark as prayed for (replaces likes)
 - `POST /api/prayers/:id/comment` - Add comment
-- `GET /api/prayers/trending` - Get trending prayers
+- `GET /api/prayers/trending` - Get trending prayers (view-based ranking)
 
 ### Bible & Study
 - `GET /api/bible/verse-of-the-day` - Daily verse
@@ -102,6 +109,11 @@ A comprehensive community-based prayer mobile application that connects people t
 - `GET /api/users/me/friends` - Get friends list
 - `GET /api/users/leaderboard` - Community leaderboard
 
+### Church Finder
+- `GET /api/churches/nearby` - Find churches near location
+- `GET /api/churches/:id/details` - Get detailed church information
+- `GET /api/churches/denominations` - List available denominations
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -110,6 +122,7 @@ A comprehensive community-based prayer mobile application that connects people t
 - Expo CLI (`npm install -g expo-cli`)
 - OpenAI API key
 - Bible API key (optional, fallback data included)
+- Google Places API key (optional, for church finder feature)
 
 ### Backend Setup
 
@@ -136,6 +149,7 @@ A comprehensive community-based prayer mobile application that connects people t
    JWT_SECRET=your_super_secret_jwt_key
    OPENAI_API_KEY=your_openai_api_key
    BIBLE_API_KEY=your_bible_api_key
+   GOOGLE_PLACES_API_KEY=your_google_places_api_key
    PORT=5000
    ```
 
@@ -192,10 +206,18 @@ The app will automatically create the necessary collections. For development, yo
 4. **Community Stats**: Local community engagement metrics and leaderboards
 
 ### Social Engagement
-1. **Like System**: Like prayers to show support and increase their visibility
-2. **Prayer Tracking**: Mark when you've prayed for someone's request
-3. **Comments**: Encourage and support through comments
-4. **Friend Network**: Build relationships with other community members
+1. **Prayer Support**: "Pray for this" button to show you're actively praying for someone
+2. **Anonymous Ranking**: View-based algorithm surfaces prayers that resonate with the community
+3. **Prayer Tracking**: Authors can see "X people are praying for me" for encouragement
+4. **Comments**: Encourage and support through comments
+5. **Friend Network**: Build relationships with other community members
+
+### Church Discovery
+1. **Location-Based Search**: Find churches near your current location
+2. **Denomination Filtering**: Filter by specific denominations or view all
+3. **Detailed Information**: View contact details, hours, reviews, and photos
+4. **Distance Calculation**: See how far each church is from your location
+5. **Fallback Data**: Works even without Google Places API using mock church data
 
 ## 📊 Data Models
 
@@ -222,8 +244,8 @@ The app will automatically create the necessary collections. For development, yo
   stats: {
     prayersSubmitted: Number,
     prayersReceived: Number,
-    likesGiven: Number,
-    likesReceived: Number,
+    prayersOffered: Number, // prayers user offered for others
+    viewsReceived: Number,  // views on user's prayers
     studiesCompleted: Number
   }
 }
@@ -241,8 +263,10 @@ The app will automatically create the necessary collections. For development, yo
     type: "Point",
     coordinates: [longitude, latitude]
   },
-  likes: [{ user: ObjectId, likedAt: Date }],
+  views: [{ user: ObjectId, sessionId: String, viewedAt: Date }],
+  viewsCount: Number, // for ranking algorithm
   prayedFor: [{ user: ObjectId, prayedAt: Date }],
+  prayedForCount: Number,
   bibleVerses: [{
     verse: String,
     reference: String,
@@ -312,9 +336,21 @@ For support, email support@prayercommunity.app or create an issue in the reposit
 
 - OpenAI for GPT-4 integration
 - Bible API providers for Scripture access
+- Google Places API for church discovery
 - The open-source community for amazing libraries
 - Beta testers and early adopters
 - The faith community for inspiration and feedback
+
+---
+
+## 🔗 Useful Links
+
+- **Backend API**: http://localhost:5000
+- **API Health Check**: http://localhost:5000/api/health
+- **MongoDB Atlas**: https://cloud.mongodb.com/
+- **OpenAI API**: https://platform.openai.com/api-keys
+- **Bible API**: https://scripture.api.bible/
+- **Google Places API**: https://developers.google.com/maps/documentation/places/web-service
 
 ---
 

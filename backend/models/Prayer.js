@@ -74,17 +74,21 @@ const prayerSchema = new mongoose.Schema({
     enum: ['public', 'friends', 'private'],
     default: 'public',
   },
-  likes: [{
+  views: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-    likedAt: {
+    viewedAt: {
       type: Date,
       default: Date.now,
     },
+    // Track anonymous views for non-logged users
+    sessionId: {
+      type: String,
+    },
   }],
-  likesCount: {
+  viewsCount: {
     type: Number,
     default: 0,
   },
@@ -243,16 +247,17 @@ prayerSchema.index({
 prayerSchema.index({ author: 1, createdAt: -1 });
 prayerSchema.index({ category: 1, createdAt: -1 });
 prayerSchema.index({ urgency: 1, createdAt: -1 });
-prayerSchema.index({ likesCount: -1, createdAt: -1 });
+prayerSchema.index({ viewsCount: -1, createdAt: -1 });
+prayerSchema.index({ prayedForCount: -1, createdAt: -1 });
 prayerSchema.index({ visibility: 1, isActive: 1, createdAt: -1 });
 
 // TTL index for automatic deletion of expired prayers
 prayerSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-// Update likesCount when likes array is modified
+// Update counts when arrays are modified
 prayerSchema.pre('save', function(next) {
-  if (this.isModified('likes')) {
-    this.likesCount = this.likes.length;
+  if (this.isModified('views')) {
+    this.viewsCount = this.views.length;
   }
   if (this.isModified('prayedFor')) {
     this.prayedForCount = this.prayedFor.length;
@@ -260,9 +265,15 @@ prayerSchema.pre('save', function(next) {
   next();
 });
 
-// Instance method to check if user has liked the prayer
-prayerSchema.methods.isLikedByUser = function(userId) {
-  return this.likes.some(like => like.user.toString() === userId.toString());
+// Instance method to check if user has viewed the prayer
+prayerSchema.methods.hasUserViewed = function(userId, sessionId) {
+  if (userId) {
+    return this.views.some(view => view.user && view.user.toString() === userId.toString());
+  }
+  if (sessionId) {
+    return this.views.some(view => view.sessionId === sessionId);
+  }
+  return false;
 };
 
 // Instance method to check if user has prayed for this prayer
@@ -270,19 +281,20 @@ prayerSchema.methods.isPrayedForByUser = function(userId) {
   return this.prayedFor.some(prayer => prayer.user.toString() === userId.toString());
 };
 
-// Instance method to add a like
-prayerSchema.methods.addLike = function(userId) {
-  if (!this.isLikedByUser(userId)) {
-    this.likes.push({ user: userId });
-    this.likesCount = this.likes.length;
+// Instance method to add a view (for ranking algorithm)
+prayerSchema.methods.addView = function(userId, sessionId) {
+  // Don't add duplicate views from same user/session
+  if (!this.hasUserViewed(userId, sessionId)) {
+    const viewData = { viewedAt: new Date() };
+    if (userId) {
+      viewData.user = userId;
+    }
+    if (sessionId) {
+      viewData.sessionId = sessionId;
+    }
+    this.views.push(viewData);
+    this.viewsCount = this.views.length;
   }
-  return this.save();
-};
-
-// Instance method to remove a like
-prayerSchema.methods.removeLike = function(userId) {
-  this.likes = this.likes.filter(like => like.user.toString() !== userId.toString());
-  this.likesCount = this.likes.length;
   return this.save();
 };
 
@@ -348,7 +360,7 @@ prayerSchema.statics.findPrayersNearLocation = function(longitude, latitude, rad
     .limit(options.limit || 50);
 };
 
-// Static method to find trending prayers
+// Static method to find trending prayers (view-based ranking)
 prayerSchema.statics.findTrendingPrayers = function(options = {}) {
   const query = {
     isActive: true,
@@ -360,7 +372,7 @@ prayerSchema.statics.findTrendingPrayers = function(options = {}) {
 
   return this.find(query)
     .populate('author', 'username firstName lastName profilePicture')
-    .sort({ likesCount: -1, prayedForCount: -1, createdAt: -1 })
+    .sort({ viewsCount: -1, prayedForCount: -1, createdAt: -1 })
     .limit(options.limit || 20);
 };
 

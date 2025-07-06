@@ -220,10 +220,10 @@ router.get('/', optionalAuth, [
           sortOption = { createdAt: 1 };
           break;
         case 'popular':
-          sortOption = { likesCount: -1, createdAt: -1 };
+          sortOption = { viewsCount: -1, prayedForCount: -1, createdAt: -1 };
           break;
         case 'trending':
-          sortOption = { likesCount: -1, prayedForCount: -1, createdAt: -1 };
+          sortOption = { viewsCount: -1, prayedForCount: -1, createdAt: -1 };
           break;
         case 'newest':
         default:
@@ -384,10 +384,13 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
+    // Track view for ranking algorithm (anonymous)
+    const sessionId = req.headers['x-session-id'] || req.ip;
+    await prayer.addView(req.user?._id, sessionId);
+
     res.json({
       prayer,
       userInteraction: req.user ? {
-        hasLiked: prayer.isLikedByUser(req.user._id),
         hasPrayedFor: prayer.isPrayedForByUser(req.user._id)
       } : null
     });
@@ -527,44 +530,6 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// @route   POST /api/prayers/:id/like
-// @desc    Like/unlike a prayer
-// @access  Private
-router.post('/:id/like', auth, async (req, res) => {
-  try {
-    const prayer = await Prayer.findById(req.params.id);
-
-    if (!prayer) {
-      return res.status(404).json({
-        error: 'Prayer not found',
-        message: 'The requested prayer does not exist'
-      });
-    }
-
-    const hasLiked = prayer.isLikedByUser(req.user._id);
-
-    if (hasLiked) {
-      await prayer.removeLike(req.user._id);
-      await req.user.updateOne({ $inc: { 'stats.likesGiven': -1 } });
-    } else {
-      await prayer.addLike(req.user._id);
-      await req.user.updateOne({ $inc: { 'stats.likesGiven': 1 } });
-    }
-
-    res.json({
-      message: hasLiked ? 'Prayer unliked' : 'Prayer liked',
-      liked: !hasLiked,
-      likesCount: prayer.likesCount
-    });
-  } catch (error) {
-    console.error('Like prayer error:', error);
-    res.status(500).json({
-      error: 'Failed to like prayer',
-      message: 'Internal server error'
-    });
-  }
-});
-
 // @route   POST /api/prayers/:id/pray
 // @desc    Mark that user prayed for this prayer
 // @access  Private
@@ -583,10 +548,19 @@ router.post('/:id/pray', auth, async (req, res) => {
 
     if (!hasPrayedFor) {
       await prayer.addPrayerRecord(req.user._id);
+      
+      // Update user stats
+      await req.user.updateOne({ $inc: { 'stats.prayersOffered': 1 } });
+      
+      // Update prayer author's stats
+      await prayer.populate('author');
+      if (prayer.author) {
+        await prayer.author.updateOne({ $inc: { 'stats.prayersReceived': 1 } });
+      }
     }
 
     res.json({
-      message: 'Prayer recorded',
+      message: hasPrayedFor ? 'Already praying for this request' : 'Thank you for praying!',
       prayedFor: true,
       prayedForCount: prayer.prayedForCount
     });
@@ -598,6 +572,8 @@ router.post('/:id/pray', auth, async (req, res) => {
     });
   }
 });
+
+
 
 // @route   POST /api/prayers/:id/comment
 // @desc    Add a comment to a prayer
