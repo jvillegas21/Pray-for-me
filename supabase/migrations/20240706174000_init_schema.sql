@@ -33,6 +33,12 @@ create policy "Public read prayers" on public.prayers
 create policy "Owner modify prayers" on public.prayers
   for update using (auth.uid() = user_id);
 
+create policy "Owner insert prayers" on public.prayers
+  for insert with check (auth.uid() = user_id);
+
+create policy "Owner delete prayers" on public.prayers
+  for delete using (auth.uid() = user_id);
+
 -- Policies for prayer_likes
 create policy "Public read prayer likes" on public.prayer_likes
   for select using (true);
