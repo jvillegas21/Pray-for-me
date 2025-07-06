@@ -1,0 +1,26 @@
+{
+  "name": "prayer-community-app",
+  "version": "1.0.0",
+  "description": "A community-based prayer mobile app with geolocation, AI Bible verses, and guided studies",
+  "main": "index.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "mobile": "cd mobile && npm start",
+    "install-all": "npm install && cd mobile && npm install && cd ../backend && npm install"
+  },
+  "workspaces": [
+    "backend",
+    "mobile"
+  ],
+  "keywords": [
+    "prayer",
+    "community",
+    "mobile",
+    "geolocation",
+    "bible",
+    "spiritual"
+  ],
+  "author": "Prayer Community Team",
+  "license": "MIT"
+}
