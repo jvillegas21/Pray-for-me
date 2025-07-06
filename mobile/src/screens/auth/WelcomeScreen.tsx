@@ -25,11 +25,7 @@ const WelcomeScreen = () => {
         </View>
 
         <View style={styles.imageContainer}>
-          <Image
-            source={require('../../assets/prayer-hands.png')}
-            style={styles.image}
-            resizeMode="contain"
-          />
+          <Text style={styles.imageText}>🙏</Text>
         </View>
 
         <View style={styles.buttonContainer}>
@@ -88,9 +84,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: spacing.xl,
   },
-  image: {
-    width: width * 0.7,
-    height: width * 0.7,
+  imageText: {
+    fontSize: 120,
+    marginBottom: spacing.lg,
   },
   buttonContainer: {
     marginBottom: spacing.xl,
