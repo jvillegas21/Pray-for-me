@@ -1,20 +1,22 @@
+import React from 'react';
+// @ts-expect-error: navigation types will resolve once deps installed
+import { NavigationContainer } from '@react-navigation/native';
+// @ts-expect-error: navigation types will resolve once deps installed
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import SubmitPrayerScreen from './src/screens/SubmitPrayerScreen';
+import PrayersFeedScreen from './src/screens/PrayersFeedScreen';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <NavigationContainer>
       <StatusBar style="auto" />
-    </View>
+      <Stack.Navigator>
+        <Stack.Screen name="Feed" component={PrayersFeedScreen} options={{ title: 'Prayers Nearby' }} />
+        <Stack.Screen name="Submit" component={SubmitPrayerScreen} options={{ title: 'Submit Prayer' }} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
