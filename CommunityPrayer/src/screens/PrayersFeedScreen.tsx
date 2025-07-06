@@ -3,6 +3,8 @@ import { View, Text, FlatList, RefreshControl, StyleSheet, ActivityIndicator, Bu
 import { supabase } from '../lib/supabase';
 // @ts-expect-error: navigation types will resolve once deps installed
 import { useNavigation } from '@react-navigation/native';
+// @ts-expect-error: expo-location types once installed
+import * as Location from 'expo-location';
 
 interface Prayer {
   id: string;
@@ -18,11 +20,25 @@ const PrayersFeedScreen: React.FC = () => {
 
   const fetchPrayers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from<Prayer>('prayers')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
+    let locationFilterApplied = false;
+    let query = supabase.from<Prayer>('prayers').select('*');
+
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
+        const { latitude, longitude } = loc.coords;
+        const radiusMeters = 10000; // 10 km radius – tweak as needed
+        const point = `POINT(${longitude} ${latitude})`;
+        // Apply PostGIS st_dwithin filter via PostgREST operator
+        query = query.filter('location', 'st_dwithin', `${point},${radiusMeters}`);
+        locationFilterApplied = true;
+      }
+    } catch (err) {
+      console.log('Location permission denied or error fetching location; showing global feed');
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
     if (error) {
       console.error('Error fetching prayers:', error.message);
     } else {

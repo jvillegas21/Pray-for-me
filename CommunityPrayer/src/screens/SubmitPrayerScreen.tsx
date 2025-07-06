@@ -25,9 +25,11 @@ const SubmitPrayerScreen: React.FC = () => {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
       const { latitude, longitude } = loc.coords;
 
+      const pointWKT = `SRID=4326;POINT(${longitude} ${latitude})`;
+
       const { error } = await supabase.from('prayers').insert({
         body: text.trim(),
-        location: `POINT(${longitude} ${latitude})`,
+        location: pointWKT,
       });
       if (error) {
         throw error;
