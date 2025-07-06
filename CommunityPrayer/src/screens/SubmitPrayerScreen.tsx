@@ -3,9 +3,12 @@ import { View, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'r
 // @ts-expect-error: types available after installing expo-location
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
+// @ts-expect-error navigation types will resolve
+import { useNavigation } from '@react-navigation/native';
 
 const SubmitPrayerScreen: React.FC = () => {
   const [text, setText] = useState('');
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -27,15 +30,22 @@ const SubmitPrayerScreen: React.FC = () => {
 
       const pointWKT = `SRID=4326;POINT(${longitude} ${latitude})`;
 
-      const { error } = await supabase.from('prayers').insert({
-        body: text.trim(),
-        location: pointWKT,
-      });
-      if (error) {
-        throw error;
-      }
-      Alert.alert('Prayer submitted!');
+      const { data, error } = await supabase
+        .from('prayers')
+        .insert({ body: text.trim(), location: pointWKT })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+
       setText('');
+
+      if (data?.id) {
+        // @ts-ignore navigation type
+        navigation.navigate('Verses' as never, { prayerId: data.id } as never);
+      } else {
+        Alert.alert('Prayer submitted!');
+      }
     } catch (err: any) {
       Alert.alert('Error', err.message);
     } finally {
