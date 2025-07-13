@@ -48,7 +48,7 @@ export const prayerService = {
 
       let query = supabase
         .from('prayer_requests')
-        .select('*')
+        .select('id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id')
         .eq('privacy_level', 'public')
         .order('created_at', { ascending: false });
 
@@ -141,13 +141,25 @@ export const prayerService = {
           }
 
           return {
-            ...request,
+            id: request.id,
+            userId: request.user_id,
+            title: request.title,
+            description: request.description,
+            category: request.category,
+            urgency: request.urgency_level,
+            isAnonymous: request.is_anonymous,
+            location: request.location,
+            tags: request.tags || [],
+            responses,
+            status: request.status,
+            createdAt: request.created_at,
+            updatedAt: request.updated_at,
+            expiresAt: request.expires_at,
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
               avatar_url: null,
             },
-            responses,
           };
         })
       );
@@ -180,7 +192,7 @@ export const prayerService = {
 
       const { data, error } = await supabase
         .from('prayer_requests')
-        .select('*')
+        .select('id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -252,13 +264,25 @@ export const prayerService = {
           }
 
           return {
-            ...request,
+            id: request.id,
+            userId: request.user_id,
+            title: request.title,
+            description: request.description,
+            category: request.category,
+            urgency: request.urgency_level,
+            isAnonymous: request.is_anonymous,
+            location: request.location,
+            tags: request.tags || [],
+            responses,
+            status: request.status,
+            createdAt: request.created_at,
+            updatedAt: request.updated_at,
+            expiresAt: request.expires_at,
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
               avatar_url: null,
             },
-            responses,
           };
         })
       );
