@@ -1,6 +1,0 @@
-module Pods_TempApp {
-  umbrella header "Pods-TempApp-umbrella.h"
-
-  export *
-  module * { export * }
-}
