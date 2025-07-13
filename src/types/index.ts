@@ -137,4 +137,9 @@ export type NavigationProps = {
   Settings: undefined;
   Notifications: undefined;
   Map: undefined;
+  // Tab screen names
+  HomeTab: undefined;
+  CommunitiesTab: undefined;
+  MapTab: undefined;
+  ProfileTab: undefined;
 };

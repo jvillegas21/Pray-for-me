@@ -10,12 +10,13 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { theme, shadows, borderRadius, spacing, gradients, animations } from '@/theme';
+import { PrayerCategory } from '@/types';
 import GlassCard from './GlassCard';
 
 interface PrayerCardProps {
   title: string;
   description: string;
-  category: string;
+  category: PrayerCategory;
   urgency: 'low' | 'medium' | 'high' | 'urgent';
   timeAgo: string;
   responseCount: number;
@@ -93,7 +94,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
   };
 
   const getCategoryIcon = () => {
-    const iconMap = {
+    const iconMap: Record<PrayerCategory, string> = {
       health: 'local-hospital',
       family: 'family-restroom',
       work: 'work',
@@ -296,6 +297,7 @@ const styles = StyleSheet.create({
   supportButton: {
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
+    backgroundColor: theme.colors.surface,
     ...shadows.small,
   },
   

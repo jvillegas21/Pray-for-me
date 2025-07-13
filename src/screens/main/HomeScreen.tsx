@@ -99,14 +99,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       title: 'Explore',
       subtitle: 'Find communities',
       gradient: gradients.peace,
-      onPress: () => navigation.navigate('Communities'),
+      onPress: () => navigation.navigate('CommunitiesTab'),
     },
     {
       icon: 'map',
       title: 'Nearby',
       subtitle: 'Local prayers',
       gradient: gradients.sunrise,
-      onPress: () => navigation.navigate('Map'),
+      onPress: () => navigation.navigate('MapTab'),
     },
   ];
 
@@ -259,7 +259,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   </Text>
                   <GradientButton
                     title="Join Community"
-                    onPress={() => navigation.navigate('Communities')}
+                    onPress={() => navigation.navigate('CommunitiesTab')}
                     variant="peace"
                     size="small"
                     style={styles.joinButton}
