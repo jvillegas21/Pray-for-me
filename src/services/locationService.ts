@@ -1,5 +1,28 @@
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
+import { MAPBOX_ACCESS_TOKEN } from '@env';
+
+const MAPBOX_ACCESS_TOKEN_VALUE = MAPBOX_ACCESS_TOKEN || '';
+const MAPBOX_API_BASE = 'https://api.mapbox.com';
+
+export interface LocationCoordinates {
+  latitude: number;
+  longitude: number;
+}
+
+export interface Place {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: LocationCoordinates;
+  category?: string;
+}
+
+export interface RouteResult {
+  distance: number; // in meters
+  duration: number; // in seconds
+  coordinates: LocationCoordinates[];
+}
 
 export const locationService = {
   async requestPermission(): Promise<'granted' | 'denied' | 'pending'> {
@@ -30,7 +53,7 @@ export const locationService = {
     return 'granted';
   },
 
-  async getCurrentLocation(): Promise<{ latitude: number; longitude: number }> {
+  async getCurrentLocation(): Promise<LocationCoordinates> {
     return new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
         (position) => {
@@ -52,7 +75,7 @@ export const locationService = {
   },
 
   async watchPosition(
-    onSuccess: (position: { latitude: number; longitude: number }) => void,
+    onSuccess: (position: LocationCoordinates) => void,
     onError: (error: string) => void
   ): Promise<number> {
     return Geolocation.watchPosition(
@@ -96,5 +119,150 @@ export const locationService = {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // Distance in kilometers
     return distance;
+  },
+
+  // Mapbox Geocoding API
+  async geocodeAddress(address: string): Promise<Place[]> {
+    try {
+      const encodedAddress = encodeURIComponent(address);
+      const response = await fetch(
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&limit=5`
+      );
+      
+      const data = await response.json();
+      
+      if (!data.features || data.features.length === 0) {
+        return [];
+      }
+      
+      return data.features.map((feature: any) => ({
+        id: feature.id,
+        name: feature.text,
+        address: feature.place_name,
+        coordinates: {
+          longitude: feature.center[0],
+          latitude: feature.center[1],
+        },
+        category: feature.properties?.category,
+      }));
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return [];
+    }
+  },
+
+  // Mapbox Reverse Geocoding
+  async reverseGeocode(coordinates: LocationCoordinates): Promise<Place | null> {
+    try {
+      const response = await fetch(
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${coordinates.longitude},${coordinates.latitude}.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&limit=1`
+      );
+      
+      const data = await response.json();
+      
+      if (!data.features || data.features.length === 0) {
+        return null;
+      }
+      
+      const feature = data.features[0];
+      return {
+        id: feature.id,
+        name: feature.text,
+        address: feature.place_name,
+        coordinates: {
+          longitude: feature.center[0],
+          latitude: feature.center[1],
+        },
+        category: feature.properties?.category,
+      };
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return null;
+    }
+  },
+
+  // Mapbox Directions API
+  async getRoute(
+    from: LocationCoordinates,
+    to: LocationCoordinates,
+    profile: 'driving' | 'walking' | 'cycling' = 'driving'
+  ): Promise<RouteResult | null> {
+    try {
+      const response = await fetch(
+        `${MAPBOX_API_BASE}/directions/v5/mapbox/${profile}/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&geometries=geojson`
+      );
+      
+      const data = await response.json();
+      
+      if (!data.routes || data.routes.length === 0) {
+        return null;
+      }
+      
+      const route = data.routes[0];
+      return {
+        distance: route.distance,
+        duration: route.duration,
+        coordinates: route.geometry.coordinates.map((coord: [number, number]) => ({
+          longitude: coord[0],
+          latitude: coord[1],
+        })),
+      };
+    } catch (error) {
+      console.error('Routing error:', error);
+      return null;
+    }
+  },
+
+  // Search for places of worship nearby
+  async searchNearbyPlacesOfWorship(
+    coordinates: LocationCoordinates,
+    radius: number = 5000 // meters
+  ): Promise<Place[]> {
+    try {
+      const response = await fetch(
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/church.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&proximity=${coordinates.longitude},${coordinates.latitude}&limit=10&types=poi`
+      );
+      
+      const data = await response.json();
+      
+      if (!data.features || data.features.length === 0) {
+        return [];
+      }
+      
+      return data.features
+        .filter((feature: any) => {
+          const distance = this.calculateDistance(
+            coordinates.latitude,
+            coordinates.longitude,
+            feature.center[1],
+            feature.center[0]
+          );
+          return distance <= radius / 1000; // Convert to km
+        })
+        .map((feature: any) => ({
+          id: feature.id,
+          name: feature.text,
+          address: feature.place_name,
+          coordinates: {
+            longitude: feature.center[0],
+            latitude: feature.center[1],
+          },
+          category: 'place_of_worship',
+        }));
+    } catch (error) {
+      console.error('Places search error:', error);
+      return [];
+    }
+  },
+
+  // Check if location services are available
+  async isLocationServicesEnabled(): Promise<boolean> {
+    return new Promise((resolve) => {
+      Geolocation.getCurrentPosition(
+        () => resolve(true),
+        () => resolve(false),
+        { timeout: 1000 }
+      );
+    });
   },
 };

@@ -1,29 +1,59 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect } from 'react';
 import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { PaperProvider, MD3Theme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { store } from '@/store';
+import AppNavigator from '@/navigation/AppNavigator';
+import { theme } from '@/theme';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
+import { supabase } from '@/services/authService';
+import { Linking } from 'react-native';
 
-import AppNavigator from './src/navigation/AppNavigator';
-import { store, persistor } from './src/store';
-import { theme } from './src/theme';
-import LoadingScreen from './src/screens/LoadingScreen';
+// Debug environment variables on app startup
+console.log('🚀 App starting...');
+console.log('🔍 Environment Variables Check:');
+console.log('SUPABASE_URL:', SUPABASE_URL ? 'SET' : 'NOT SET');
+console.log('SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Handle deep links for email confirmation
+    const handleDeepLink = (url: string) => {
+      console.log('🔗 Handling deep link:', url);
+      if (url.includes('access_token=')) {
+        console.log('✅ Email confirmation detected, processing...');
+        // Supabase will automatically handle the session from the URL
+        // when detectSessionInUrl is true
+      }
+    };
+
+    // Handle initial URL if app was opened via deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+
+    // Listen for incoming links when app is already running
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
   return (
     <Provider store={store}>
-      <PersistGate loading={<LoadingScreen />} persistor={persistor}>
-        <PaperProvider theme={theme}>
-          <SafeAreaProvider>
-            <NavigationContainer>
-              <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
-              <AppNavigator />
-            </NavigationContainer>
-          </SafeAreaProvider>
-        </PaperProvider>
-      </PersistGate>
+      <PaperProvider theme={theme as unknown as MD3Theme}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </PaperProvider>
     </Provider>
   );
 };

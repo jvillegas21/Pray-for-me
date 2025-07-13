@@ -26,6 +26,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       return;
     }
 
+
+
     try {
       await dispatch(login({ email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state
@@ -59,7 +61,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
-                left={<TextInput.Icon icon="email" />}
+                testID="email-input"
               />
 
               <TextInput
@@ -68,16 +70,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 onChangeText={setPassword}
                 mode="outlined"
                 style={styles.input}
-                secureTextEntry={!showPassword}
+                secureTextEntry={true}
                 autoCapitalize="none"
                 autoComplete="password"
-                left={<TextInput.Icon icon="lock" />}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
+                testID="password-input"
               />
 
               <Button
@@ -176,7 +172,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
 

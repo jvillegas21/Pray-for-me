@@ -3,18 +3,24 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { config } from './config';
-import { connectDatabase } from './config/database';
-import { errorHandler } from './middleware/errorHandler';
-import { logger } from './utils/logger';
+import dotenv from 'dotenv';
 
-// Import routes
-import authRoutes from './routes/auth';
-import prayerRoutes from './routes/prayer';
-import communityRoutes from './routes/community';
-import userRoutes from './routes/user';
+// Load environment variables
+dotenv.config();
 
 const app = express();
+
+// Configuration
+const config = {
+  NODE_ENV: process.env.NODE_ENV || 'development',
+  PORT: parseInt(process.env.PORT || '3000', 10),
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  ONESIGNAL_APP_ID: process.env.ONESIGNAL_APP_ID,
+  ONESIGNAL_REST_API_KEY: process.env.ONESIGNAL_REST_API_KEY,
+};
 
 // Security middleware
 app.use(helmet());
@@ -43,14 +49,23 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0',
+    services: {
+      supabase: config.SUPABASE_URL ? 'configured' : 'not configured',
+      onesignal: config.ONESIGNAL_APP_ID ? 'configured' : 'not configured',
+    },
   });
 });
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/prayer-requests', prayerRoutes);
-app.use('/api/communities', communityRoutes);
-app.use('/api/users', userRoutes);
+// API status endpoint
+app.get('/api/status', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Pray For Me API is running',
+    timestamp: new Date().toISOString(),
+    environment: config.NODE_ENV,
+    version: '2.0.0',
+  });
+});
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -62,44 +77,50 @@ app.use('*', (req, res) => {
 });
 
 // Error handling middleware
-app.use(errorHandler);
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: config.NODE_ENV === 'development' ? err.message : undefined,
+  });
+});
 
-// Database connection and server startup
+// Server startup
 const startServer = async () => {
   try {
-    await connectDatabase();
-    
     const PORT = config.PORT || 3000;
     const server = app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📱 Environment: ${config.NODE_ENV}`);
-      logger.info(`🔗 Database: ${config.NODE_ENV === 'production' ? 'Connected' : 'Local'}`);
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📱 Environment: ${config.NODE_ENV}`);
+      console.log(`🔗 Supabase: ${config.SUPABASE_URL ? 'Connected' : 'Not configured'}`);
+      console.log(`📢 OneSignal: ${config.ONESIGNAL_APP_ID ? 'Connected' : 'Not configured'}`);
     });
 
     // Graceful shutdown
     process.on('SIGTERM', () => {
-      logger.info('SIGTERM received, shutting down gracefully...');
+      console.log('SIGTERM received, shutting down gracefully...');
       server.close(() => {
-        logger.info('Process terminated');
+        console.log('Process terminated');
         process.exit(0);
       });
     });
 
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err: Error) => {
-  logger.error('Unhandled Promise Rejection:', err);
+  console.error('Unhandled Promise Rejection:', err);
   process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err: Error) => {
-  logger.error('Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err);
   process.exit(1);
 });
 

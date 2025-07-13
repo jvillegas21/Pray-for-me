@@ -16,8 +16,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   
@@ -49,11 +47,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       return;
     }
 
+
+
     try {
       await dispatch(register({ name, email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state
     } catch (error) {
-      setSnackbarMessage(error as string);
+      const errorMessage = error as string;
+      if (errorMessage.includes('confirm your account')) {
+        setSnackbarMessage('Registration successful! Please check your email and confirm your account before signing in.');
+      } else {
+        setSnackbarMessage(errorMessage);
+      }
       setShowSnackbar(true);
     }
   };
@@ -82,7 +87,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 style={styles.input}
                 autoCapitalize="words"
                 autoComplete="name"
-                left={<TextInput.Icon icon="account" />}
+                testID="name-input"
               />
 
               <TextInput
@@ -94,7 +99,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
-                left={<TextInput.Icon icon="email" />}
+                testID="email-input"
               />
 
               <TextInput
@@ -103,16 +108,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 onChangeText={setPassword}
                 mode="outlined"
                 style={styles.input}
-                secureTextEntry={!showPassword}
+                secureTextEntry={true}
                 autoCapitalize="none"
                 autoComplete="new-password"
-                left={<TextInput.Icon icon="lock" />}
-                right={
-                  <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowPassword(!showPassword)}
-                  />
-                }
+                testID="password-input"
               />
 
               <TextInput
@@ -121,16 +120,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                 onChangeText={setConfirmPassword}
                 mode="outlined"
                 style={styles.input}
-                secureTextEntry={!showConfirmPassword}
+                secureTextEntry={true}
                 autoCapitalize="none"
                 autoComplete="new-password"
-                left={<TextInput.Icon icon="lock-check" />}
-                right={
-                  <TextInput.Icon
-                    icon={showConfirmPassword ? 'eye-off' : 'eye'}
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  />
-                }
+                testID="confirm-password-input"
               />
 
               <Button
@@ -229,7 +222,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
 
