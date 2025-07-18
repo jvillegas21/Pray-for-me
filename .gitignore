@@ -127,3 +127,4 @@ jspm_packages/
 
 # TernJS port file
 .tern-port ios/boost_1_76_0.tar.bz2
+backend/.env
