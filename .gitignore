@@ -42,6 +42,7 @@ ios/*.xcworkspace
 ios/*.xcodeproj
 ios/DerivedData/
 ios/TempApp.xcworkspace/
+ios/TempApp.xcworkspace/
 ios/TempApp.xcodeproj/
 
 # Android
@@ -126,5 +127,8 @@ jspm_packages/
 .dynamodb/
 
 # TernJS port file
-.tern-port ios/boost_1_76_0.tar.bz2
+.tern-port
+
+# Large files and sensitive data
+ios/boost_1_76_0.tar.bz2
 backend/.env

@@ -594,7 +594,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         }
                         onSupport={() => {}}
                         onShare={() => {}}
-                        onPrayerCountChange={(newCount) => {
+                        onPrayerCountChange={(newCount: number) => {
                           setPrayerCounts(prev => ({
                             ...prev,
                             [request.id]: newCount
@@ -632,6 +632,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
               )}
             </View>
 
+            {/* Community Suggestions */}
+            <View style={styles.communityContainer}>
+              <Text style={styles.sectionTitle}>Suggested Communities</Text>
+              <GlassCard variant="elevated" style={styles.communityCard}>
+                <LinearGradient
+                  colors={gradients.peace}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.communityBanner}
+                >
+                  <Icon name="groups" size={32} color={theme.colors.textOnDark} />
+                </LinearGradient>
+                <View style={styles.communityContent}>
+                  <Text style={styles.communityTitle}>Local Faith Community</Text>
+                  <Text style={styles.communityDescription}>
+                    Join 127 members in your area for prayer and support
+                  </Text>
+                  <GradientButton
+                    title="Join Community"
+                    onPress={() => navigation.navigate('CommunitiesTab')}
+                    variant="peace"
+                    size="small"
+                    style={styles.joinButton}
+                  />
+                </View>
+              </GlassCard>
+            </View>
 
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
@@ -798,6 +825,44 @@ const styles = StyleSheet.create({
     color: theme.colors.textOnDark,
     opacity: 0.7,
     textAlign: 'center',
+  },
+
+  // Community
+  communityContainer: {
+    marginBottom: spacing.xl,
+  },
+
+  communityCard: {
+    marginHorizontal: spacing.lg,
+    overflow: 'hidden',
+  },
+
+  communityBanner: {
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  communityContent: {
+    padding: spacing.lg,
+  },
+
+  communityTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: spacing.sm,
+  },
+
+  communityDescription: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+
+  joinButton: {
+    alignSelf: 'flex-start',
   },
 });
 

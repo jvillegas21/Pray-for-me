@@ -111,7 +111,6 @@ export const pushNotificationService = {
         prayer_reminders: settings.prayerReminders ? 'true' : 'false',
         crisis_alerts: settings.crisisAlerts ? 'true' : 'false',
       };
-
       await this.setUserTags(tags);
     } catch (error) {
       console.error('Set notification preferences failed:', error);
@@ -122,7 +121,6 @@ export const pushNotificationService = {
   handleNotificationOpened(data: any): void {
     try {
       console.log('Handling notification opened:', data);
-
       if (data?.type === 'prayer_request') {
         this.navigateToPrayerRequest(data.prayerRequestId);
       } else if (data?.type === 'community_update') {

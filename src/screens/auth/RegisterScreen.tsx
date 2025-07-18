@@ -59,6 +59,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       return;
     }
 
+
+
     try {
       await dispatch(register({ name, email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state

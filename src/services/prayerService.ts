@@ -66,7 +66,6 @@ export const prayerService = {
       if (filters.category) {
         query = query.eq('category', filters.category);
       }
-
       if (filters.urgencyLevel) {
         query = query.eq('urgency_level', filters.urgencyLevel);
       }
@@ -103,7 +102,6 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-
           try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -130,7 +128,6 @@ export const prayerService = {
               responses = await Promise.all(
                 responseData.map(async (response) => {
                   let responseUserProfile = null;
-
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
@@ -231,7 +228,6 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-
           try {
             const { data: profile } = await supabase
               .from('profiles')
@@ -257,7 +253,6 @@ export const prayerService = {
               responses = await Promise.all(
                 responseData.map(async (response) => {
                   let responseUserProfile = null;
-
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
@@ -503,7 +498,6 @@ export const prayerService = {
           responses = await Promise.all(
             responseData.map(async (response) => {
               let responseUserProfile = null;
-
               try {
                 const { data: profile } = await supabase
                   .from('profiles')

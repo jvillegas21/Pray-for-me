@@ -38,6 +38,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       return;
     }
 
+
+
     try {
       await dispatch(login({ email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state

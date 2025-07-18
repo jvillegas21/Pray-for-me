@@ -76,7 +76,6 @@ export const communityService = {
       }
 
       const { data, error } = await query;
-
       if (error) {
         throw new Error(error.message);
       }
