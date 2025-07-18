@@ -45,6 +45,7 @@ import {
 } from '@/theme';
 import { RootState, AppDispatch } from '@/store';
 import { fetchPrayerRequests } from '@/store/slices/prayerSlice';
+import { getCurrentLocation, requestLocationPermission } from '@/store/slices/locationSlice';
 import PrayerCard from '@/components/PrayerCard';
 import AnimatedPrayerCard from '@/components/AnimatedPrayerCard';
 import PrayerCardSkeleton from '@/components/PrayerCardSkeleton';
@@ -77,15 +78,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const { requests, loading, lastRefresh } = useSelector(
     (state: RootState) => state.prayer
   );
+  const { current: currentLocation, permission } = useSelector(
+    (state: RootState) => state.location
+  );
   
-
-  // Facebook-style infinite scroll state
-  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
+  // Pagination state for true endless scroll
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
   const ITEMS_PER_PAGE = 10;
-  
+
   // State for encouragement and prayer counts
   const [encouragementCounts, setEncouragementCounts] = useState<{
     [id: string]: number;
@@ -98,6 +101,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   // Animation state for newly created cards only
   const [newlyAddedCards, setNewlyAddedCards] = useState<Set<string>>(new Set());
   const [previousRequestIds, setPreviousRequestIds] = useState<string[]>([]);
+
+  // Helper to load next page of requests for endless scroll
+  const loadMoreRequests = React.useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextOffset = displayedRequests.length;
+      const response = await dispatch(fetchPrayerRequests({
+        offset: nextOffset,
+        limit: ITEMS_PER_PAGE,
+        latitude: currentLocation?.latitude,
+        longitude: currentLocation?.longitude,
+        radius: 10 // 10km radius
+      })).unwrap();
+      
+      if (response.data && response.data.length > 0) {
+        setDisplayedRequests(prev => [...prev, ...response.data]);
+        setCurrentOffset(nextOffset + response.data.length);
+        
+        // If we got fewer items than requested, we've reached the end
+        if (response.data.length < ITEMS_PER_PAGE) {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more requests:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, displayedRequests.length, dispatch]);
 
   // Load initial page of requests
   const loadInitialRequests = React.useCallback(async (forceRefresh = false) => {
@@ -114,7 +150,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       // Fetch first page with pagination
       const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
-        offset: 0
+        offset: 0,
+        latitude: currentLocation?.latitude,
+        longitude: currentLocation?.longitude,
+        radius: 10 // 10km radius
       })).unwrap();
       
       const latestRequests = result.data;
@@ -206,8 +245,53 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     setPrayerCounts(prev => ({...prev, ...newPrayerCounts}));
   };
 
+  // Load more requests for endless scroll
+  const loadMoreRequests = React.useCallback(async () => {
+    if (loadingMore || !hasMore || loading) {
+      return; // Also check global loading state
+    }
+    
+    setLoadingMore(true);
+    
+    try {
+      // Fetch next page from server
+      const result = await dispatch(fetchPrayerRequests({
+        limit: ITEMS_PER_PAGE,
+        offset: currentOffset,
+        latitude: currentLocation?.latitude,
+        longitude: currentLocation?.longitude,
+        radius: 10 // 10km radius
+      })).unwrap();
+      
+      const newRequests = result.data;
+      
+      if (!newRequests || newRequests.length === 0) {
+        setHasMore(false);
+        setLoadingMore(false);
+        return;
+      }
 
-  // Facebook-style header animation logic
+      // Don't animate pagination cards - they should just appear normally
+
+      // Update local state by appending new requests
+      setDisplayedRequests(prev => [...prev, ...newRequests]);
+      setCurrentOffset(prev => prev + newRequests.length);
+      setHasMore(newRequests.length === ITEMS_PER_PAGE);
+      
+      // Load counts asynchronously
+      setTimeout(() => {
+        loadCountsForRequests(newRequests);
+      }, 0);
+      
+    } catch (error) {
+      console.error('Error loading more requests:', error);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, currentOffset, dispatch, loading]);
+
+  // Handle scroll to load more and update header
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
@@ -347,12 +431,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   // Use useFocusEffect to always fetch fresh data (but avoid over-fetching)
   useFocusEffect(
     React.useCallback(() => {
-      // Only load if we don't have data or if enough time has passed
-      const timeSinceLastRefresh = Date.now() - lastRefreshTime;
-      if (displayedRequests.length === 0 || timeSinceLastRefresh > 5000) {
-        loadInitialRequests();
-      }
-    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime])
+      // Request location permission and get current location if not already available
+      const initWithLocation = async () => {
+        if (permission === 'pending' || !currentLocation) {
+          try {
+            const result = await dispatch(requestLocationPermission()).unwrap();
+            if (result === 'granted') {
+              await dispatch(getCurrentLocation()).unwrap();
+            }
+          } catch (error) {
+            console.log('Location permission denied or error');
+          }
+        }
+        
+        // Only load if we don't have data or if enough time has passed
+        // Also prevent interference with endless scroll loading
+        const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+        if (displayedRequests.length === 0 || (timeSinceLastRefresh > 5000 && !loadingMore)) {
+          loadInitialRequests();
+        }
+      };
+      
+      initWithLocation();
+    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime, loadingMore, permission, currentLocation, dispatch])
   );
 
   // Additional navigation listener as backup
@@ -619,6 +720,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
             </View>
 
 
+
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
           </Animated.ScrollView>
@@ -775,10 +877,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Load more styles
-  loadMoreTrigger: {
-    paddingVertical: spacing.md,
-  },
 
 });
 
