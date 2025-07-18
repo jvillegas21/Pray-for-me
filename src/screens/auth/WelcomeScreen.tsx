@@ -116,9 +116,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ navigation }) => {
                 />
               </View>
 
-              <Text style={styles.appName}>Pray For Me</Text>
+              <Text style={styles.appName}>Amenity</Text>
               <Text style={styles.tagline}>
-                Where hearts connect through prayer
+                Prayer that connects. Community that uplifts.
               </Text>
             </Animated.View>
 

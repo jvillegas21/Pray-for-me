@@ -1,27 +1,27 @@
 {
-  "name": "TempApp",
-  "displayName": "Pray For Me",
-  "scheme": "prayforMe",
+  "name": "Amenity",
+  "displayName": "Amenity",
+  "scheme": "amenity",
   "ios": {
-    "bundleIdentifier": "org.reactjs.native.example.TempApp",
+    "bundleIdentifier": "org.reactjs.native.example.Amenity",
     "infoPlist": {
       "CFBundleURLTypes": [
         {
-          "CFBundleURLName": "Pray For Me",
-          "CFBundleURLSchemes": ["prayforMe"]
+          "CFBundleURLName": "Amenity",
+          "CFBundleURLSchemes": ["amenity"]
         }
       ]
     }
   },
   "android": {
-    "package": "org.reactjs.native.example.TempApp",
+    "package": "org.reactjs.native.example.Amenity",
     "intentFilters": [
       {
         "action": "VIEW",
         "autoVerify": true,
         "data": [
           {
-            "scheme": "prayforMe"
+            "scheme": "amenity"
           }
         ],
         "category": ["BROWSABLE", "DEFAULT"]

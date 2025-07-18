@@ -62,7 +62,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <View style={styles.header}>
               <Title style={styles.title}>Welcome Back</Title>
               <Paragraph style={styles.subtitle}>
-                Sign in to continue your spiritual journey
+                Prayer that connects. Community that uplifts.
               </Paragraph>
             </View>
 
