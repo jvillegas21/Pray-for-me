@@ -40,7 +40,10 @@ const locationSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setCurrentLocation: (state, action: PayloadAction<{ latitude: number; longitude: number }>) => {
+    setCurrentLocation: (
+      state,
+      action: PayloadAction<{ latitude: number; longitude: number }>
+    ) => {
       state.current = action.payload;
     },
   },

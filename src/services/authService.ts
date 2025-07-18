@@ -4,16 +4,19 @@ import 'react-native-url-polyfill/auto';
 import { User } from '@/types';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
 
-const supabaseUrl = SUPABASE_URL || '';
-const supabaseAnonKey = SUPABASE_ANON_KEY || '';
-
 // Debug logging
 console.log('🔍 Environment Variables Debug:');
-console.log('SUPABASE_URL:', supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'NOT SET');
-console.log('SUPABASE_ANON_KEY:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'NOT SET');
+console.log(
+  'SUPABASE_URL:',
+  SUPABASE_URL ? `${SUPABASE_URL.substring(0, 20)}...` : 'NOT SET'
+);
+console.log(
+  'SUPABASE_ANON_KEY:',
+  SUPABASE_ANON_KEY ? `${SUPABASE_ANON_KEY.substring(0, 20)}...` : 'NOT SET'
+);
 
 // Validate Supabase configuration
-if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
+if (!SUPABASE_URL || SUPABASE_URL === 'https://your-project.supabase.co') {
   console.error('❌ SUPABASE_URL is not configured!');
   console.error('📝 Please:');
   console.error('1. Go to https://supabase.com and create a new project');
@@ -22,7 +25,7 @@ if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
   console.error('4. Restart Metro and rebuild the app');
 }
 
-if (!supabaseAnonKey || supabaseAnonKey === 'your_anon_key_here') {
+if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'your_anon_key_here') {
   console.error('❌ SUPABASE_ANON_KEY is not configured!');
   console.error('📝 Please:');
   console.error('1. Go to your Supabase project Settings > API');
@@ -33,22 +36,18 @@ if (!supabaseAnonKey || supabaseAnonKey === 'your_anon_key_here') {
 
 // Create Supabase client with actual values
 console.log('🔧 Creating Supabase client with:');
-console.log('URL:', supabaseUrl);
-console.log('Key length:', supabaseAnonKey.length);
-console.log('Key starts with:', supabaseAnonKey.substring(0, 20));
+console.log('URL:', SUPABASE_URL);
+console.log('Key length:', SUPABASE_ANON_KEY.length);
+console.log('Key starts with:', SUPABASE_ANON_KEY.substring(0, 20));
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
-  {
-    auth: {
-      storage: AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-  }
-);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+});
 
 console.log('✅ Supabase client created successfully');
 
@@ -67,10 +66,13 @@ export interface AuthResponse {
 }
 
 export const authService = {
-  async login(credentials: { email: string; password: string }): Promise<AuthResponse> {
+  async login(credentials: {
+    email: string;
+    password: string;
+  }): Promise<AuthResponse> {
     try {
       console.log('🔐 Attempting login for:', credentials.email);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password,
@@ -113,7 +115,10 @@ export const authService = {
             ]);
 
           if (createError) {
-            console.error('❌ Failed to create profile during login:', createError);
+            console.error(
+              '❌ Failed to create profile during login:',
+              createError
+            );
           } else {
             console.log('✅ Profile created successfully during login');
           }
@@ -138,11 +143,15 @@ export const authService = {
     }
   },
 
-  async register(userData: { email: string; password: string; name: string }): Promise<AuthResponse> {
+  async register(userData: {
+    email: string;
+    password: string;
+    name: string;
+  }): Promise<AuthResponse> {
     try {
       console.log('📝 Attempting registration for:', userData.email);
       console.log('🔧 Using Supabase client for registration');
-      
+
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: userData.password,
@@ -168,23 +177,25 @@ export const authService = {
 
       // Check if email confirmation is required
       if (data.session === null) {
-        console.log('📧 Email confirmation required - user needs to confirm email before signing in');
-        throw new Error('Please check your email and confirm your account before signing in.');
+        console.log(
+          '📧 Email confirmation required - user needs to confirm email before signing in'
+        );
+        throw new Error(
+          'Please check your email and confirm your account before signing in.'
+        );
       }
 
       // Create user profile
       console.log('👤 Creating user profile...');
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: data.user.id,
-            name: userData.name,
-            email: userData.email,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
+      const { error: profileError } = await supabase.from('profiles').insert([
+        {
+          id: data.user.id,
+          name: userData.name,
+          email: userData.email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ]);
 
       if (profileError) {
         console.error('❌ Profile creation error:', profileError);
@@ -224,8 +235,10 @@ export const authService = {
 
   async updateProfile(userData: Partial<AuthUser>): Promise<AuthUser> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('No authenticated user');
       }
@@ -292,8 +305,10 @@ export const authService = {
 
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         return null;
       }
@@ -355,7 +370,9 @@ export const authService = {
 
   async getSession() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       return session;
     } catch (error) {
       console.error('Get session error:', error);
@@ -383,9 +400,7 @@ export const authService = {
         throw new Error(uploadError.message);
       }
 
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
       return data.publicUrl;
     } catch (error: any) {

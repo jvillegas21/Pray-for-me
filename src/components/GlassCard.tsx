@@ -22,12 +22,7 @@ const GlassCard: React.FC<GlassCardProps> = ({
   variant = 'elevated',
   size = 'medium',
 }) => {
-  const cardStyle = [
-    styles.container,
-    styles[size],
-    styles[variant],
-    style,
-  ];
+  const cardStyle = [styles.container, styles[size], styles[variant], style];
 
   if (Platform.OS === 'ios') {
     return (
@@ -37,9 +32,7 @@ const GlassCard: React.FC<GlassCardProps> = ({
         blurAmount={blurAmount}
         reducedTransparencyFallbackColor={theme.colors.surface}
       >
-        <View style={styles.content}>
-          {children}
-        </View>
+        <View style={styles.content}>{children}</View>
       </BlurView>
     );
   }
@@ -47,9 +40,7 @@ const GlassCard: React.FC<GlassCardProps> = ({
   // Android fallback with custom glass effect
   return (
     <View style={[cardStyle, styles.androidGlass]}>
-      <View style={styles.content}>
-        {children}
-      </View>
+      <View style={styles.content}>{children}</View>
     </View>
   );
 };
@@ -61,7 +52,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.glass,
   },
-  
+
   // Size variants
   small: {
     padding: spacing.md,
@@ -72,7 +63,7 @@ const styles = StyleSheet.create({
   large: {
     padding: spacing.xl,
   },
-  
+
   // Style variants
   elevated: {
     ...shadows.glass,
@@ -87,13 +78,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.glassStrong,
     ...shadows.medium,
   },
-  
+
   // Android glass fallback
   androidGlass: {
     backgroundColor: theme.colors.surfaceGlass,
     backdropFilter: 'blur(10px)',
   },
-  
+
   content: {
     flex: 1,
   },

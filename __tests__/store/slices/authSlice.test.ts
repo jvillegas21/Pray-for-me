@@ -245,7 +245,9 @@ describe('Auth Slice', () => {
         isAuthenticated: true,
       };
 
-      let state = authReducer(authenticatedState, { type: updateProfile.pending.type });
+      let state = authReducer(authenticatedState, {
+        type: updateProfile.pending.type,
+      });
       expect(state.loading).toBe(true);
       expect(state.user).toEqual(mockUser); // User data should remain during update
 
@@ -283,4 +285,4 @@ describe('Auth Slice', () => {
       expect(state.error).toBe('New error');
     });
   });
-}); 
+});

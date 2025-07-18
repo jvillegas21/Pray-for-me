@@ -132,8 +132,11 @@ ReactNativeHapticFeedback.trigger('impactLight');
 ### **4. Lottie Animations**
 ```typescript
 // Beautiful prayer-themed animations
+import prayerHandsAnimation from '@/assets/animations/prayer-hands.json';
+import bookFlipAnimation from '@/assets/animations/book-page-flip.json';
+
 <LottieView
-  source={require('@/assets/animations/prayer-hands.json')}
+  source={prayerHandsAnimation}
   autoPlay
   loop
   style={styles.logoAnimation}

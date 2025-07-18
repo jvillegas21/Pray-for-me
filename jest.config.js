@@ -9,7 +9,10 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'node',
-  testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/?(*.)+(spec|test).(ts|tsx|js)'],
+  testMatch: [
+    '**/__tests__/**/*.(ts|tsx|js)',
+    '**/?(*.)+(spec|test).(ts|tsx|js)',
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -24,4 +27,4 @@ module.exports = {
       statements: 70,
     },
   },
-}; 
+};

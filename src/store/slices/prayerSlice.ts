@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { PrayerState, PrayerRequest, PrayerResponse } from '@/types';
-import { prayerService } from '@/services/prayerService';
+import {
+  prayerService,
+  CreatePrayerRequestData,
+} from '@/services/prayerService';
 
 const initialState: PrayerState = {
   requests: [],
@@ -10,15 +13,25 @@ const initialState: PrayerState = {
   filters: {
     radius: 10, // Default 10km radius
   },
+  lastRefresh: Date.now(),
 };
 
 // Async thunks
 export const fetchPrayerRequests = createAsyncThunk(
   'prayer/fetchRequests',
-  async (filters: { latitude?: number; longitude?: number; radius?: number }, { rejectWithValue }) => {
+  async (
+    filters: { 
+      latitude?: number; 
+      longitude?: number; 
+      radius?: number;
+      offset?: number;
+      limit?: number;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await prayerService.fetchRequests(filters);
-      return response;
+      return { data: response, isLoadMore: filters.offset !== undefined && filters.offset > 0 };
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -39,7 +52,7 @@ export const fetchMyPrayerRequests = createAsyncThunk(
 
 export const createPrayerRequest = createAsyncThunk(
   'prayer/createRequest',
-  async (requestData: Omit<PrayerRequest, 'id' | 'responses' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (requestData: CreatePrayerRequestData, { rejectWithValue }) => {
     try {
       const response = await prayerService.createRequest(requestData);
       return response;
@@ -51,9 +64,15 @@ export const createPrayerRequest = createAsyncThunk(
 
 export const respondToPrayerRequest = createAsyncThunk(
   'prayer/respondToRequest',
-  async (responseData: Omit<PrayerResponse, 'id' | 'createdAt'>, { rejectWithValue }) => {
+  async (
+    responseData: { prayerRequestId: string; message: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await prayerService.respondToRequest(responseData);
+      const response = await prayerService.respondToRequest(
+        responseData.prayerRequestId,
+        responseData.message
+      );
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message);
@@ -63,7 +82,10 @@ export const respondToPrayerRequest = createAsyncThunk(
 
 export const updatePrayerRequest = createAsyncThunk(
   'prayer/updateRequest',
-  async ({ id, updates }: { id: string; updates: Partial<PrayerRequest> }, { rejectWithValue }) => {
+  async (
+    { id, updates }: { id: string; updates: Partial<PrayerRequest> },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await prayerService.updateRequest(id, updates);
       return response;
@@ -80,12 +102,21 @@ const prayerSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    setFilters: (state, action: PayloadAction<Partial<PrayerState['filters']>>) => {
+    setFilters: (
+      state,
+      action: PayloadAction<Partial<PrayerState['filters']>>
+    ) => {
       state.filters = { ...state.filters, ...action.payload };
     },
-    addPrayerResponse: (state, action: PayloadAction<{ requestId: string; response: PrayerResponse }>) => {
+    triggerRefresh: (state) => {
+      state.lastRefresh = Date.now();
+    },
+    addPrayerResponse: (
+      state,
+      action: PayloadAction<{ requestId: string; response: PrayerResponse }>
+    ) => {
       const { requestId, response } = action.payload;
-      const request = state.requests.find(req => req.id === requestId);
+      const request = state.requests.find((req) => req.id === requestId);
       if (request) {
         request.responses.push(response);
       }
@@ -100,7 +131,16 @@ const prayerSlice = createSlice({
       })
       .addCase(fetchPrayerRequests.fulfilled, (state, action) => {
         state.loading = false;
-        state.requests = action.payload;
+        const { data, isLoadMore } = action.payload;
+        
+        if (isLoadMore) {
+          // Append new data for endless scroll
+          state.requests = [...state.requests, ...data];
+        } else {
+          // Replace data for initial load or refresh
+          state.requests = data;
+        }
+        
         state.error = null;
       })
       .addCase(fetchPrayerRequests.rejected, (state, action) => {
@@ -142,8 +182,10 @@ const prayerSlice = createSlice({
       })
       .addCase(respondToPrayerRequest.fulfilled, (state, action) => {
         state.loading = false;
-        const { requestId, response } = action.payload;
-        const request = state.requests.find(req => req.id === requestId);
+        const response = action.payload;
+        const request = state.requests.find(
+          (req) => req.id === response.prayerRequestId
+        );
         if (request) {
           request.responses.push(response);
         }
@@ -161,7 +203,9 @@ const prayerSlice = createSlice({
       .addCase(updatePrayerRequest.fulfilled, (state, action) => {
         state.loading = false;
         const updatedRequest = action.payload;
-        const index = state.myRequests.findIndex(req => req.id === updatedRequest.id);
+        const index = state.myRequests.findIndex(
+          (req) => req.id === updatedRequest.id
+        );
         if (index !== -1) {
           state.myRequests[index] = updatedRequest;
         }
@@ -174,5 +218,6 @@ const prayerSlice = createSlice({
   },
 });
 
-export const { clearError, setFilters, addPrayerResponse } = prayerSlice.actions;
+export const { clearError, setFilters, triggerRefresh, addPrayerResponse } =
+  prayerSlice.actions;
 export default prayerSlice.reducer;

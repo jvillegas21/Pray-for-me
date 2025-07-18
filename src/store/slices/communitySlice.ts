@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CommunityState, Community } from '@/types';
-import { communityService } from '@/services/communityService';
+import {
+  communityService,
+  CreateCommunityData,
+} from '@/services/communityService';
 
 const initialState: CommunityState = {
   communities: [],
@@ -12,7 +15,10 @@ const initialState: CommunityState = {
 // Async thunks
 export const fetchCommunities = createAsyncThunk(
   'community/fetchCommunities',
-  async (filters: { latitude?: number; longitude?: number; radius?: number }, { rejectWithValue }) => {
+  async (
+    filters: { latitude?: number; longitude?: number; radius?: number },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await communityService.fetchCommunities(filters);
       return response;
@@ -38,8 +44,16 @@ export const joinCommunity = createAsyncThunk(
   'community/joinCommunity',
   async (communityId: string, { rejectWithValue }) => {
     try {
-      const response = await communityService.joinCommunity(communityId);
-      return response;
+      const success = await communityService.joinCommunity(communityId);
+      if (success) {
+        // Fetch the community details to add to myCommunities
+        const community = await communityService.getCommunityById(communityId);
+        if (!community) {
+          throw new Error('Community not found after joining');
+        }
+        return community;
+      }
+      throw new Error('Failed to join community');
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -60,7 +74,7 @@ export const leaveCommunity = createAsyncThunk(
 
 export const createCommunity = createAsyncThunk(
   'community/createCommunity',
-  async (communityData: Omit<Community, 'id' | 'memberCount' | 'createdAt' | 'updatedAt'>, { rejectWithValue }) => {
+  async (communityData: CreateCommunityData, { rejectWithValue }) => {
     try {
       const response = await communityService.createCommunity(communityData);
       return response;
@@ -129,7 +143,9 @@ const communitySlice = createSlice({
       })
       .addCase(leaveCommunity.fulfilled, (state, action) => {
         state.loading = false;
-        state.myCommunities = state.myCommunities.filter(c => c.id !== action.payload);
+        state.myCommunities = state.myCommunities.filter(
+          (c) => c.id !== action.payload
+        );
         state.error = null;
       })
       .addCase(leaveCommunity.rejected, (state, action) => {

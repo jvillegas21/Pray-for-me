@@ -1,20 +1,33 @@
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
-  ViewStyle, 
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
   TextStyle,
   Animated,
   Pressable,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { theme, shadows, borderRadius, spacing, gradients, animations } from '@/theme';
+import {
+  theme,
+  shadows,
+  borderRadius,
+  spacing,
+  gradients,
+  animations,
+} from '@/theme';
 
 interface GradientButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'spiritual' | 'peace' | 'sunrise' | 'sunset';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'spiritual'
+    | 'peace'
+    | 'sunrise'
+    | 'sunset';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   loading?: boolean;
@@ -84,9 +97,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
           style={styles.gradient}
         >
           {icon && iconPosition === 'left' && icon}
-          <Text style={buttonTextStyle}>
-            {loading ? 'Loading...' : title}
-          </Text>
+          <Text style={buttonTextStyle}>{loading ? 'Loading...' : title}</Text>
           {icon && iconPosition === 'right' && icon}
         </LinearGradient>
       </Pressable>
@@ -100,14 +111,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.medium,
   },
-  
+
   gradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
-  
+
   // Size variants
   small: {
     height: 40,
@@ -121,14 +132,14 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: borderRadius.xl,
   },
-  
+
   // Text styles
   text: {
     color: theme.colors.textOnDark,
     fontWeight: '600',
     textAlign: 'center',
   },
-  
+
   smallText: {
     fontSize: 14,
     lineHeight: 20,
@@ -141,12 +152,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 28,
   },
-  
+
   // Disabled state
   disabled: {
     opacity: 0.5,
   },
-  
+
   disabledText: {
     color: theme.colors.textTertiary,
   },

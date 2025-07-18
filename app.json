@@ -27,5 +27,6 @@
         "category": ["BROWSABLE", "DEFAULT"]
       }
     ]
-  }
+  },
+  "jsEngine": "jsc"
 } 

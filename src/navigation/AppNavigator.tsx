@@ -11,7 +11,9 @@ import LoadingScreen from '@/screens/LoadingScreen';
 const Stack = createNativeStackNavigator<NavigationProps>();
 
 const AppNavigator: React.FC = () => {
-  const { isAuthenticated, loading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   if (loading) {
     return <LoadingScreen />;

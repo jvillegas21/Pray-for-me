@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Title, Paragraph, Snackbar } from 'react-native-paper';
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import {
+  TextInput,
+  Button,
+  Title,
+  Paragraph,
+  Snackbar,
+} from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { register } from '@/store/slices/authSlice';
@@ -18,7 +30,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  
+
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
@@ -52,10 +64,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     try {
       await dispatch(register({ name, email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state
-    } catch (error) {
-      const errorMessage = error as string;
+    } catch (registerError) {
+      const errorMessage = registerError as string;
       if (errorMessage.includes('confirm your account')) {
-        setSnackbarMessage('Registration successful! Please check your email and confirm your account before signing in.');
+        setSnackbarMessage(
+          'Registration successful! Please check your email and confirm your account before signing in.'
+        );
       } else {
         setSnackbarMessage(errorMessage);
       }
@@ -65,7 +79,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >

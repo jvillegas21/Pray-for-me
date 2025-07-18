@@ -11,6 +11,8 @@ import ProfileScreen from '@/screens/main/ProfileScreen';
 import MapScreen from '@/screens/main/MapScreen';
 import CreatePrayerRequestScreen from '@/screens/main/CreatePrayerRequestScreen';
 import PrayerRequestScreen from '@/screens/main/PrayerRequestScreen';
+import { PrayerRequestTransitionScreen } from '@/screens/main/PrayerRequestTransitionScreen';
+import { PrayerRequestResultsScreen } from '@/screens/main/PrayerRequestResultsScreen';
 import CommunityDetailScreen from '@/screens/main/CommunityDetailScreen';
 import SettingsScreen from '@/screens/main/SettingsScreen';
 
@@ -21,7 +23,18 @@ const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Home" component={HomeScreen} />
     <Stack.Screen name="PrayerRequest" component={PrayerRequestScreen} />
-    <Stack.Screen name="CreatePrayerRequest" component={CreatePrayerRequestScreen} />
+    <Stack.Screen
+      name="CreatePrayerRequest"
+      component={CreatePrayerRequestScreen}
+    />
+    <Stack.Screen
+      name="PrayerRequestTransition"
+      component={PrayerRequestTransitionScreen}
+    />
+    <Stack.Screen
+      name="PrayerRequestResults"
+      component={PrayerRequestResultsScreen}
+    />
   </Stack.Navigator>
 );
 
@@ -42,31 +55,9 @@ const ProfileStack = () => (
 const MainNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
-          switch (route.name) {
-            case 'HomeTab':
-              iconName = 'home';
-              break;
-            case 'CommunitiesTab':
-              iconName = 'group';
-              break;
-            case 'MapTab':
-              iconName = 'map';
-              break;
-            case 'ProfileTab':
-              iconName = 'person';
-              break;
-            default:
-              iconName = 'home';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+      screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.placeholder,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.backdrop,
@@ -75,35 +66,47 @@ const MainNavigator: React.FC = () => {
           paddingTop: 8,
         },
         headerShown: false,
-      })}
+      }}
     >
-      <Tab.Screen 
-        name="HomeTab" 
+      <Tab.Screen
+        name="HomeTab"
         component={HomeStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Home',
           tabBarBadge: undefined,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="home" size={size} color={color} />
+          ),
         }}
       />
-      <Tab.Screen 
-        name="CommunitiesTab" 
+      <Tab.Screen
+        name="CommunitiesTab"
         component={CommunitiesStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Communities',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="group" size={size} color={color} />
+          ),
         }}
       />
-      <Tab.Screen 
-        name="MapTab" 
+      <Tab.Screen
+        name="MapTab"
         component={MapScreen}
-        options={{ 
+        options={{
           tabBarLabel: 'Map',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="map" size={size} color={color} />
+          ),
         }}
       />
-      <Tab.Screen 
-        name="ProfileTab" 
+      <Tab.Screen
+        name="ProfileTab"
         component={ProfileStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Profile',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="person" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>

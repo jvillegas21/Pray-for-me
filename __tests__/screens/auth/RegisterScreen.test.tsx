@@ -24,11 +24,13 @@ describe('RegisterScreen', () => {
     );
 
     expect(getByText('Create Account')).toBeTruthy();
-    expect(getByText('Join our faith community and start your spiritual journey')).toBeTruthy();
-    
+    expect(
+      getByText('Join our faith community and start your spiritual journey')
+    ).toBeTruthy();
+
     const textInputs = UNSAFE_getAllByType(TextInput);
     expect(textInputs).toHaveLength(4); // Name, Email, Password, Confirm Password inputs
-    
+
     expect(getByText('Create Account')).toBeTruthy();
     expect(getByText('Sign In')).toBeTruthy();
   });
@@ -246,7 +248,7 @@ describe('RegisterScreen', () => {
 
   it('shows loading state during registration', async () => {
     (authService.register as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
+      () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
     const { UNSAFE_getAllByType, getByText } = renderWithProviders(
@@ -306,4 +308,4 @@ describe('RegisterScreen', () => {
     // We can't easily test Snackbar dismissal in this test environment
     expect(getByText('Email already registered')).toBeTruthy();
   });
-}); 
+});

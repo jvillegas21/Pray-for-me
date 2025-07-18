@@ -2,13 +2,21 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { theme, spacing } from '@/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CommunityDetailScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Community Detail</Text>
-      <Text style={styles.subtitle}>View community information and members</Text>
-    </View>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      edges={['top', 'left', 'right']}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Community Detail</Text>
+        <Text style={styles.subtitle}>
+          View community information and members
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -33,4 +41,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CommunityDetailScreen; 
+export default CommunityDetailScreen;
