@@ -126,4 +126,4 @@ jspm_packages/
 .dynamodb/
 
 # TernJS port file
-.tern-port 
+.tern-port ios/boost_1_76_0.tar.bz2
