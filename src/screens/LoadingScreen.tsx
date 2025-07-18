@@ -6,9 +6,9 @@ import { theme, spacing } from '@/theme';
 const LoadingScreen: React.FC = () => {
   return (
     <View style={styles.container}>
-      <ActivityIndicator 
-        animating={true} 
-        size="large" 
+      <ActivityIndicator
+        animating={true}
+        size="large"
         color={theme.colors.primary}
       />
       <Text style={styles.loadingText}>Loading...</Text>

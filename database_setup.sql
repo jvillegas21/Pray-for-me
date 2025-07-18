@@ -113,6 +113,28 @@ VALUES
   ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000001', 'Sample Prayer Request', 'This is a sample prayer request for testing purposes.', 'health', 'public', 'medium', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
 
+-- Encouragements table
+CREATE TABLE IF NOT EXISTS encouragements (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  prayer_request_id uuid REFERENCES prayer_requests(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  message text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_encouragements_prayer_request_id ON encouragements(prayer_request_id);
+CREATE INDEX IF NOT EXISTS idx_encouragements_user_id ON encouragements(user_id);
+
+-- Prayer actions table (tracks who has prayed for what)
+CREATE TABLE IF NOT EXISTS prayer_actions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  prayer_request_id uuid REFERENCES prayer_requests(id) ON DELETE CASCADE,
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (prayer_request_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_prayer_actions_prayer_request_id ON prayer_actions(prayer_request_id);
+CREATE INDEX IF NOT EXISTS idx_prayer_actions_user_id ON prayer_actions(user_id);
+
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;

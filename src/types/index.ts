@@ -39,6 +39,19 @@ export interface PrayerRequest {
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
+  encouragements?: Encouragement[];
+  aiGenerated?: boolean;
+  aiFields?: {
+    bibleStudy?: {
+      title: string;
+      devotional: string;
+      reflectionQuestions: string[];
+      crossReferences?: { reference: string; text: string }[];
+    } | null;
+    localResources?: any[];
+    wordsOfEncouragement?: string[];
+    followUpFramework?: string;
+  };
 }
 
 export interface PrayerResponse {
@@ -67,7 +80,7 @@ export interface Community {
   updatedAt: string;
 }
 
-export type PrayerCategory = 
+export type PrayerCategory =
   | 'health'
   | 'family'
   | 'work'
@@ -97,6 +110,7 @@ export interface PrayerState {
     urgency?: string;
     radius?: number;
   };
+  lastRefresh: number;
 }
 
 export interface CommunityState {
@@ -126,6 +140,7 @@ export type NavigationProps = {
   // Navigation stack types
   Auth: undefined;
   Main: undefined;
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
   Home: undefined;
@@ -137,9 +152,52 @@ export type NavigationProps = {
   Settings: undefined;
   Notifications: undefined;
   Map: undefined;
+  PrayerRequestTransition: {
+    prayerData: {
+      prayerText: string;
+      location: {
+        city: string;
+        state: string;
+        country: string;
+      };
+      wantsBibleStudy: boolean;
+      wantsResources: boolean;
+    };
+  };
+  PrayerRequestResults: {
+    aiResults: {
+      sentimentSummary: string;
+      bibleVerses: {
+        reference: string;
+        text: string;
+        whyItHelps: string;
+      }[];
+      bibleStudy?: {
+        title: string;
+        devotional: string;
+        reflectionQuestions: string[];
+      } | null;
+      localResources?: any[];
+      raw?: string;
+    };
+  };
   // Tab screen names
   HomeTab: undefined;
   CommunitiesTab: undefined;
   MapTab: undefined;
   ProfileTab: undefined;
 };
+
+export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
+
+export interface Encouragement {
+  id: string;
+  prayerRequestId: string;
+  userId: string;
+  message: string;
+  createdAt: string;
+  isAnonymous: boolean;
+  moderationStatus: ModerationStatus;
+  flaggedBy?: string[]; // userIds who reported
+  flaggedReason?: string;
+}

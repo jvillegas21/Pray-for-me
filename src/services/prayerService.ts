@@ -1,5 +1,6 @@
 import { supabase } from './authService';
 import { PrayerRequest, PrayerResponse } from '@/types';
+import axios from 'axios';
 
 export interface PrayerRequestWithResponses extends PrayerRequest {
   responses: PrayerResponse[];
@@ -30,11 +31,17 @@ export interface PrayerFilter {
   category?: string;
   urgencyLevel?: string;
   privacyLevel?: string;
+  offset?: number; // For pagination
+  limit?: number; // For pagination
 }
 
+
 export const prayerService = {
-  async fetchRequests(filters: PrayerFilter = {}): Promise<PrayerRequestWithResponses[]> {
+  async fetchRequests(
+    filters: PrayerFilter = {}
+  ): Promise<PrayerRequestWithResponses[]> {
     try {
+      
       // First, check if the prayer_requests table exists
       const { data: tableCheck, error: tableError } = await supabase
         .from('prayer_requests')
@@ -42,13 +49,16 @@ export const prayerService = {
         .limit(1);
 
       if (tableError) {
-        console.log('📋 Prayer requests table not found, returning empty array');
+        // Prayer requests table error
         return [];
       }
 
+
       let query = supabase
         .from('prayer_requests')
-        .select('id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id')
+        .select(
+          'id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id'
+        )
         .eq('privacy_level', 'public')
         .order('created_at', { ascending: false });
 
@@ -56,7 +66,7 @@ export const prayerService = {
       if (filters.category) {
         query = query.eq('category', filters.category);
       }
-      
+
       if (filters.urgencyLevel) {
         query = query.eq('urgency_level', filters.urgencyLevel);
       }
@@ -69,15 +79,23 @@ export const prayerService = {
         query = query.not('location', 'is', null);
       }
 
+      // Add pagination support
+      if (filters.offset !== undefined && filters.limit !== undefined) {
+        const from = filters.offset;
+        const to = filters.offset + filters.limit - 1;
+        query = query.range(from, to);
+      }
+
       const { data, error } = await query;
-      
+
       if (error) {
-        console.error('❌ Error fetching prayer requests:', error);
+        // Error fetching prayer requests:', error);
         return [];
       }
 
       // If no data, return empty array
       if (!data || data.length === 0) {
+        
         return [];
       }
 
@@ -85,17 +103,17 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-          
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .eq('id', request.user_id)
               .single();
-            
+
             userProfile = profile;
           } catch (profileError) {
-            console.warn('⚠️ Could not fetch profile for user:', request.user_id);
+            // Could not fetch profile
           }
 
           // Fetch responses for this prayer request
@@ -112,17 +130,17 @@ export const prayerService = {
               responses = await Promise.all(
                 responseData.map(async (response) => {
                   let responseUserProfile = null;
-                  
+
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
                       .select('id, name, avatar_url')
                       .eq('id', response.user_id)
                       .single();
-                    
+
                     responseUserProfile = profile;
                   } catch (profileError) {
-                    console.warn('⚠️ Could not fetch profile for response user:', response.user_id);
+                    // Could not fetch profile
                   }
 
                   return {
@@ -137,7 +155,7 @@ export const prayerService = {
               );
             }
           } catch (responseError) {
-            console.warn('⚠️ Could not fetch responses for prayer request:', request.id);
+            // Could not fetch responses
           }
 
           return {
@@ -166,15 +184,17 @@ export const prayerService = {
 
       return requestsWithProfiles;
     } catch (error: any) {
-      console.error('❌ Error in fetchRequests:', error);
+      // Error in fetchRequests:', error);
       return [];
     }
   },
 
   async fetchMyRequests(): Promise<PrayerRequestWithResponses[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -186,18 +206,20 @@ export const prayerService = {
         .limit(1);
 
       if (tableError) {
-        console.log('📋 Prayer requests table not found, returning empty array');
+        // Prayer requests table not found
         return [];
       }
 
       const { data, error } = await supabase
         .from('prayer_requests')
-        .select('id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id')
+        .select(
+          'id, title, description, category, urgency_level, privacy_level, is_anonymous, location, tags, status, created_at, updated_at, expires_at, user_id'
+        )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching my prayer requests:', error);
+        // Error fetching my prayer requests:', error);
         return [];
       }
 
@@ -209,17 +231,17 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-          
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .eq('id', request.user_id)
               .single();
-            
+
             userProfile = profile;
           } catch (profileError) {
-            console.warn('⚠️ Could not fetch profile for user:', request.user_id);
+            // Could not fetch profile
           }
 
           // Fetch responses for this prayer request
@@ -235,17 +257,17 @@ export const prayerService = {
               responses = await Promise.all(
                 responseData.map(async (response) => {
                   let responseUserProfile = null;
-                  
+
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
                       .select('id, name, avatar_url')
                       .eq('id', response.user_id)
                       .single();
-                    
+
                     responseUserProfile = profile;
                   } catch (profileError) {
-                    console.warn('⚠️ Could not fetch profile for response user:', response.user_id);
+                    // Could not fetch profile
                   }
 
                   return {
@@ -260,7 +282,7 @@ export const prayerService = {
               );
             }
           } catch (responseError) {
-            console.warn('⚠️ Could not fetch responses for prayer request:', request.id);
+            // Could not fetch responses
           }
 
           return {
@@ -289,37 +311,48 @@ export const prayerService = {
 
       return requestsWithProfiles;
     } catch (error: any) {
-      console.error('❌ Error in fetchMyRequests:', error);
+      // Error in fetchMyRequests:', error);
       return [];
     }
   },
 
-  async createRequest(requestData: CreatePrayerRequestData): Promise<PrayerRequest> {
+  async createRequest(
+    requestData: CreatePrayerRequestData
+  ): Promise<PrayerRequest> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: authError
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        throw new Error(`Auth error: ${authError.message}`);
+      }
+
       if (!user) {
         throw new Error('Not authenticated');
       }
 
+
+      const insertData = {
+        user_id: user.id,
+        title: requestData.title,
+        description: requestData.description,
+        category: requestData.category,
+        location: requestData.location,
+        is_anonymous: requestData.isAnonymous,
+        privacy_level: requestData.privacyLevel,
+        urgency_level: requestData.urgencyLevel,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
       const { data, error } = await supabase
         .from('prayer_requests')
-        .insert([
-          {
-            user_id: user.id,
-            title: requestData.title,
-            description: requestData.description,
-            category: requestData.category,
-            location: requestData.location,
-            is_anonymous: requestData.isAnonymous,
-            privacy_level: requestData.privacyLevel,
-            urgency_level: requestData.urgencyLevel,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
+        .insert([insertData])
         .select()
         .single();
+
 
       if (error) {
         throw new Error(error.message);
@@ -331,10 +364,15 @@ export const prayerService = {
     }
   },
 
-  async updateRequest(id: string, updates: Partial<PrayerRequest>): Promise<PrayerRequest> {
+  async updateRequest(
+    id: string,
+    updates: Partial<PrayerRequest>
+  ): Promise<PrayerRequest> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -362,8 +400,10 @@ export const prayerService = {
 
   async deleteRequest(id: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -384,10 +424,15 @@ export const prayerService = {
     }
   },
 
-  async respondToRequest(prayerRequestId: string, message: string): Promise<PrayerResponse> {
+  async respondToRequest(
+    prayerRequestId: string,
+    message: string
+  ): Promise<PrayerResponse> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -439,10 +484,10 @@ export const prayerService = {
           .select('id, name, avatar_url')
           .eq('id', data.user_id)
           .single();
-        
+
         userProfile = profile;
       } catch (profileError) {
-        console.warn('⚠️ Could not fetch profile for user:', data.user_id);
+        // Could not fetch profile
       }
 
       // Fetch responses
@@ -458,17 +503,17 @@ export const prayerService = {
           responses = await Promise.all(
             responseData.map(async (response) => {
               let responseUserProfile = null;
-              
+
               try {
                 const { data: profile } = await supabase
                   .from('profiles')
                   .select('id, name, avatar_url')
                   .eq('id', response.user_id)
                   .single();
-                
+
                 responseUserProfile = profile;
               } catch (profileError) {
-                console.warn('⚠️ Could not fetch profile for response user:', response.user_id);
+                // Could not fetch profile
               }
 
               return {
@@ -483,7 +528,7 @@ export const prayerService = {
           );
         }
       } catch (responseError) {
-        console.warn('⚠️ Could not fetch responses for prayer request:', id);
+        // Could not fetch responses
       }
 
       return {
@@ -502,22 +547,22 @@ export const prayerService = {
 
   async reportRequest(id: string, reason: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
 
-      const { error } = await supabase
-        .from('prayer_reports')
-        .insert([
-          {
-            prayer_request_id: id,
-            reported_by: user.id,
-            reason: reason,
-            created_at: new Date().toISOString(),
-          },
-        ]);
+      const { error } = await supabase.from('prayer_reports').insert([
+        {
+          prayer_request_id: id,
+          reported_by: user.id,
+          reason: reason,
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
       if (error) {
         throw new Error(error.message);
@@ -530,7 +575,9 @@ export const prayerService = {
   },
 
   // Get prayer requests by category
-  async getRequestsByCategory(category: string): Promise<PrayerRequestWithResponses[]> {
+  async getRequestsByCategory(
+    category: string
+  ): Promise<PrayerRequestWithResponses[]> {
     try {
       const { data, error } = await supabase
         .from('prayer_requests')
@@ -551,17 +598,17 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-          
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .eq('id', request.user_id)
               .single();
-            
+
             userProfile = profile;
           } catch (profileError) {
-            console.warn('⚠️ Could not fetch profile for user:', request.user_id);
+            // Could not fetch profile
           }
 
           return {
@@ -578,7 +625,9 @@ export const prayerService = {
 
       return requestsWithProfiles;
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch prayer requests by category');
+      throw new Error(
+        error.message || 'Failed to fetch prayer requests by category'
+      );
     }
   },
 
@@ -604,17 +653,17 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-          
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .eq('id', request.user_id)
               .single();
-            
+
             userProfile = profile;
           } catch (profileError) {
-            console.warn('⚠️ Could not fetch profile for user:', request.user_id);
+            // Could not fetch profile
           }
 
           return {
@@ -631,14 +680,18 @@ export const prayerService = {
 
       return requestsWithProfiles;
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch urgent prayer requests');
+      throw new Error(
+        error.message || 'Failed to fetch urgent prayer requests'
+      );
     }
   },
 
   async markAsAnswered(id: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -658,12 +711,18 @@ export const prayerService = {
 
       return true;
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to mark prayer request as answered');
+      throw new Error(
+        error.message || 'Failed to mark prayer request as answered'
+      );
     }
   },
 
   // Get prayer requests by location (simplified)
-  async getRequestsByLocation(latitude: number, longitude: number, radius: number): Promise<PrayerRequestWithResponses[]> {
+  async getRequestsByLocation(
+    latitude: number,
+    longitude: number,
+    radius: number
+  ): Promise<PrayerRequestWithResponses[]> {
     try {
       // For now, we'll just get all public requests
       // In production, implement proper geospatial queries with PostGIS
@@ -686,17 +745,17 @@ export const prayerService = {
       const requestsWithProfiles = await Promise.all(
         data.map(async (request) => {
           let userProfile = null;
-          
+
           try {
             const { data: profile } = await supabase
               .from('profiles')
               .select('id, name, avatar_url')
               .eq('id', request.user_id)
               .single();
-            
+
             userProfile = profile;
           } catch (profileError) {
-            console.warn('⚠️ Could not fetch profile for user:', request.user_id);
+            // Could not fetch profile
           }
 
           return {
@@ -713,7 +772,9 @@ export const prayerService = {
 
       return requestsWithProfiles;
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch prayer requests by location');
+      throw new Error(
+        error.message || 'Failed to fetch prayer requests by location'
+      );
     }
   },
 
@@ -725,8 +786,10 @@ export const prayerService = {
     myResponses: number;
   }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -767,3 +830,265 @@ export const prayerService = {
     }
   },
 };
+
+// New methods for encouragements and prayer actions
+export const submitEncouragement = async (encouragementData: {
+  prayerRequestId: string;
+  message: string;
+}) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase
+      .from('encouragements')
+      .insert({
+        prayer_request_id: encouragementData.prayerRequestId,
+        user_id: user.id,
+        message: encouragementData.message,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      // Error submitting encouragement
+      throw error;
+    }
+
+    return data;
+  } catch (error: any) {
+    // Error in submitEncouragement:', error);
+    throw error;
+  }
+};
+
+export const getEncouragements = async (prayerRequestId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('encouragements')
+      .select(
+        `
+        *,
+        users!encouragements_user_id_fkey (
+          id,
+          email,
+          display_name
+        )
+      `
+      )
+      .eq('prayer_request_id', prayerRequestId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      // Error fetching encouragements:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error: any) {
+    // Error in getEncouragements:', error);
+    return [];
+  }
+};
+
+export const deleteEncouragement = async (encouragementId: string) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('encouragements')
+      .delete()
+      .eq('id', encouragementId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      // Error deleting encouragement:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error: any) {
+    // Error in deleteEncouragement:', error);
+    throw error;
+  }
+};
+
+// Prayer actions methods
+export const addPrayerAction = async (prayerRequestId: string) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { data, error } = await supabase
+      .from('prayer_actions')
+      .insert({
+        prayer_request_id: prayerRequestId,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      // Error adding prayer action:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error: any) {
+    // Error in addPrayerAction:', error);
+    throw error;
+  }
+};
+
+export const removePrayerAction = async (prayerRequestId: string) => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('Not authenticated');
+    }
+
+    const { error } = await supabase
+      .from('prayer_actions')
+      .delete()
+      .eq('prayer_request_id', prayerRequestId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      // Error removing prayer action:', error);
+      throw error;
+    }
+
+    return true;
+  } catch (error: any) {
+    // Error in removePrayerAction:', error);
+    throw error;
+  }
+};
+
+export const hasUserPrayed = async (
+  prayerRequestId: string
+): Promise<boolean> => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('prayer_actions')
+      .select('id')
+      .eq('prayer_request_id', prayerRequestId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is "not found"
+      // Error checking prayer action:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error: any) {
+    // Error in hasUserPrayed:', error);
+    return false;
+  }
+};
+
+export const hasUserEncouraged = async (
+  prayerRequestId: string
+): Promise<boolean> => {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from('encouragements')
+      .select('id')
+      .eq('prayer_request_id', prayerRequestId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is "not found"
+      // Error checking encouragement:', error);
+      return false;
+    }
+
+    return !!data;
+  } catch (error: any) {
+    // Error in hasUserEncouraged:', error);
+    return false;
+  }
+};
+
+// Get counts for prayer requests
+export const getEncouragementCount = async (
+  prayerRequestId: string
+): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('encouragements')
+      .select('*', { count: 'exact', head: true })
+      .eq('prayer_request_id', prayerRequestId);
+
+    if (error) {
+      // Error getting encouragement count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error: any) {
+    // Error in getEncouragementCount:', error);
+    return 0;
+  }
+};
+
+export const getPrayerCount = async (
+  prayerRequestId: string
+): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('prayer_actions')
+      .select('*', { count: 'exact', head: true })
+      .eq('prayer_request_id', prayerRequestId);
+
+    if (error) {
+      // Error getting prayer count:', error);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (error: any) {
+    // Error in getPrayerCount:', error);
+    return 0;
+  }
+};
+
+export const getRequestById = prayerService.getRequestById;

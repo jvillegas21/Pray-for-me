@@ -11,6 +11,8 @@ import ProfileScreen from '@/screens/main/ProfileScreen';
 import MapScreen from '@/screens/main/MapScreen';
 import CreatePrayerRequestScreen from '@/screens/main/CreatePrayerRequestScreen';
 import PrayerRequestScreen from '@/screens/main/PrayerRequestScreen';
+import { PrayerRequestTransitionScreen } from '@/screens/main/PrayerRequestTransitionScreen';
+import { PrayerRequestResultsScreen } from '@/screens/main/PrayerRequestResultsScreen';
 import CommunityDetailScreen from '@/screens/main/CommunityDetailScreen';
 import SettingsScreen from '@/screens/main/SettingsScreen';
 
@@ -21,7 +23,18 @@ const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Home" component={HomeScreen} />
     <Stack.Screen name="PrayerRequest" component={PrayerRequestScreen} />
-    <Stack.Screen name="CreatePrayerRequest" component={CreatePrayerRequestScreen} />
+    <Stack.Screen
+      name="CreatePrayerRequest"
+      component={CreatePrayerRequestScreen}
+    />
+    <Stack.Screen
+      name="PrayerRequestTransition"
+      component={PrayerRequestTransitionScreen}
+    />
+    <Stack.Screen
+      name="PrayerRequestResults"
+      component={PrayerRequestResultsScreen}
+    />
   </Stack.Navigator>
 );
 
@@ -66,7 +79,7 @@ const MainNavigator: React.FC = () => {
           return <Icon name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.placeholder,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.backdrop,
@@ -77,32 +90,32 @@ const MainNavigator: React.FC = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="HomeTab" 
+      <Tab.Screen
+        name="HomeTab"
         component={HomeStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Home',
           tabBarBadge: undefined,
         }}
       />
-      <Tab.Screen 
-        name="CommunitiesTab" 
+      <Tab.Screen
+        name="CommunitiesTab"
         component={CommunitiesStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Communities',
         }}
       />
-      <Tab.Screen 
-        name="MapTab" 
+      <Tab.Screen
+        name="MapTab"
         component={MapScreen}
-        options={{ 
+        options={{
           tabBarLabel: 'Map',
         }}
       />
-      <Tab.Screen 
-        name="ProfileTab" 
+      <Tab.Screen
+        name="ProfileTab"
         component={ProfileStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Profile',
         }}
       />

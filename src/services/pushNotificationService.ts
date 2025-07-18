@@ -1,8 +1,8 @@
-import OneSignal from 'react-native-onesignal';
 import { Platform } from 'react-native';
-import { ONESIGNAL_APP_ID } from '@env';
+// import OneSignal from 'react-native-onesignal';
+// import { ONESIGNAL_APP_ID } from '@env';
 
-const ONESIGNAL_APP_ID_VALUE = ONESIGNAL_APP_ID || '';
+const ONESIGNAL_APP_ID = '';
 
 export interface NotificationData {
   id: string;
@@ -23,14 +23,13 @@ export const pushNotificationService = {
   // Initialize OneSignal
   initialize(): void {
     try {
-      console.log('Initializing OneSignal with App ID:', ONESIGNAL_APP_ID_VALUE);
-      
+      console.log('Initializing OneSignal with App ID:', ONESIGNAL_APP_ID);
+
       // Basic initialization - will be configured based on actual SDK methods
       // You'll need to update this based on your OneSignal SDK version
-      
+
       // Placeholder for initialization
       // The actual OneSignal setup should be done in your App.tsx or index.js
-      
     } catch (error) {
       console.error('OneSignal initialization failed:', error);
     }
@@ -102,7 +101,9 @@ export const pushNotificationService = {
   },
 
   // Set notification preferences
-  async setNotificationPreferences(settings: PushNotificationSettings): Promise<void> {
+  async setNotificationPreferences(
+    settings: PushNotificationSettings
+  ): Promise<void> {
     try {
       const tags = {
         prayer_requests: settings.prayerRequests ? 'true' : 'false',
@@ -110,7 +111,7 @@ export const pushNotificationService = {
         prayer_reminders: settings.prayerReminders ? 'true' : 'false',
         crisis_alerts: settings.crisisAlerts ? 'true' : 'false',
       };
-      
+
       await this.setUserTags(tags);
     } catch (error) {
       console.error('Set notification preferences failed:', error);
@@ -121,7 +122,7 @@ export const pushNotificationService = {
   handleNotificationOpened(data: any): void {
     try {
       console.log('Handling notification opened:', data);
-      
+
       if (data?.type === 'prayer_request') {
         this.navigateToPrayerRequest(data.prayerRequestId);
       } else if (data?.type === 'community_update') {
@@ -165,7 +166,12 @@ export const pushNotificationService = {
     data?: any
   ): void {
     try {
-      console.log('Schedule local notification:', { title, body, triggerTime, data });
+      console.log('Schedule local notification:', {
+        title,
+        body,
+        triggerTime,
+        data,
+      });
       // TODO: Implement local notification scheduling
     } catch (error) {
       console.error('Schedule local notification failed:', error);
@@ -234,4 +240,4 @@ export const pushNotificationService = {
       console.error('Clear notifications failed:', error);
     }
   },
-}; 
+};

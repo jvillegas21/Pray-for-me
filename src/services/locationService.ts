@@ -1,8 +1,8 @@
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
-import { MAPBOX_ACCESS_TOKEN } from '@env';
+// import { MAPBOX_ACCESS_TOKEN } from '@env';
 
-const MAPBOX_ACCESS_TOKEN_VALUE = MAPBOX_ACCESS_TOKEN || '';
+const MAPBOX_ACCESS_TOKEN = '';
 const MAPBOX_API_BASE = 'https://api.mapbox.com';
 
 export interface LocationCoordinates {
@@ -32,13 +32,14 @@ export const locationService = {
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Location Permission',
-            message: 'Pray For Me needs access to your location to find nearby prayer requests and communities.',
+            message:
+              'Pray For Me needs access to your location to find nearby prayer requests and communities.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
           }
         );
-        
+
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           return 'granted';
         } else {
@@ -48,7 +49,7 @@ export const locationService = {
         return 'denied';
       }
     }
-    
+
     // For iOS, permissions are handled automatically by React Native
     return 'granted';
   },
@@ -126,15 +127,15 @@ export const locationService = {
     try {
       const encodedAddress = encodeURIComponent(address);
       const response = await fetch(
-        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&limit=5`
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${encodedAddress}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=5`
       );
-      
+
       const data = await response.json();
-      
+
       if (!data.features || data.features.length === 0) {
         return [];
       }
-      
+
       return data.features.map((feature: any) => ({
         id: feature.id,
         name: feature.text,
@@ -152,18 +153,20 @@ export const locationService = {
   },
 
   // Mapbox Reverse Geocoding
-  async reverseGeocode(coordinates: LocationCoordinates): Promise<Place | null> {
+  async reverseGeocode(
+    coordinates: LocationCoordinates
+  ): Promise<Place | null> {
     try {
       const response = await fetch(
-        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${coordinates.longitude},${coordinates.latitude}.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&limit=1`
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/${coordinates.longitude},${coordinates.latitude}.json?access_token=${MAPBOX_ACCESS_TOKEN}&limit=1`
       );
-      
+
       const data = await response.json();
-      
+
       if (!data.features || data.features.length === 0) {
         return null;
       }
-      
+
       const feature = data.features[0];
       return {
         id: feature.id,
@@ -189,23 +192,25 @@ export const locationService = {
   ): Promise<RouteResult | null> {
     try {
       const response = await fetch(
-        `${MAPBOX_API_BASE}/directions/v5/mapbox/${profile}/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&geometries=geojson`
+        `${MAPBOX_API_BASE}/directions/v5/mapbox/${profile}/${from.longitude},${from.latitude};${to.longitude},${to.latitude}?access_token=${MAPBOX_ACCESS_TOKEN}&geometries=geojson`
       );
-      
+
       const data = await response.json();
-      
+
       if (!data.routes || data.routes.length === 0) {
         return null;
       }
-      
+
       const route = data.routes[0];
       return {
         distance: route.distance,
         duration: route.duration,
-        coordinates: route.geometry.coordinates.map((coord: [number, number]) => ({
-          longitude: coord[0],
-          latitude: coord[1],
-        })),
+        coordinates: route.geometry.coordinates.map(
+          (coord: [number, number]) => ({
+            longitude: coord[0],
+            latitude: coord[1],
+          })
+        ),
       };
     } catch (error) {
       console.error('Routing error:', error);
@@ -220,15 +225,15 @@ export const locationService = {
   ): Promise<Place[]> {
     try {
       const response = await fetch(
-        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/church.json?access_token=${MAPBOX_ACCESS_TOKEN_VALUE}&proximity=${coordinates.longitude},${coordinates.latitude}&limit=10&types=poi`
+        `${MAPBOX_API_BASE}/geocoding/v5/mapbox.places/church.json?access_token=${MAPBOX_ACCESS_TOKEN}&proximity=${coordinates.longitude},${coordinates.latitude}&limit=10&types=poi`
       );
-      
+
       const data = await response.json();
-      
+
       if (!data.features || data.features.length === 0) {
         return [];
       }
-      
+
       return data.features
         .filter((feature: any) => {
           const distance = this.calculateDistance(

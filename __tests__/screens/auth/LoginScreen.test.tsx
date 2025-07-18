@@ -24,11 +24,13 @@ describe('LoginScreen', () => {
     );
 
     expect(getByText('Welcome Back')).toBeTruthy();
-    expect(getByText('Sign in to continue your spiritual journey')).toBeTruthy();
-    
+    expect(
+      getByText('Sign in to continue your spiritual journey')
+    ).toBeTruthy();
+
     const textInputs = UNSAFE_getAllByType(TextInput);
     expect(textInputs).toHaveLength(2); // Email and Password inputs
-    
+
     expect(getByText('Sign In')).toBeTruthy();
     expect(getByText('Sign Up')).toBeTruthy();
   });
@@ -135,7 +137,7 @@ describe('LoginScreen', () => {
 
   it('shows loading state during login', async () => {
     (authService.login as jest.Mock).mockImplementation(
-      () => new Promise(resolve => setTimeout(resolve, 100))
+      () => new Promise((resolve) => setTimeout(resolve, 100))
     );
 
     const { UNSAFE_getAllByType, getByText } = renderWithProviders(
@@ -241,4 +243,4 @@ describe('LoginScreen', () => {
     // We can't easily test Snackbar dismissal in this test environment
     expect(getByText('Invalid credentials')).toBeTruthy();
   });
-}); 
+});

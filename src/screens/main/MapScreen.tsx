@@ -2,13 +2,19 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { theme, spacing } from '@/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const MapScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Prayer Map</Text>
-      <Text style={styles.subtitle}>Find prayer requests near you</Text>
-    </View>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      edges={['top', 'left', 'right']}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>Prayer Map</Text>
+        <Text style={styles.subtitle}>Find prayer requests near you</Text>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -33,4 +39,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapScreen; 
+export default MapScreen;

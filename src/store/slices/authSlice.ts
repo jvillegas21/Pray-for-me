@@ -1,6 +1,21 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User } from '@/types';
-import { authService } from '@/services/authService';
+import { authService, AuthUser, AuthResponse } from '@/services/authService';
+
+// Helper function to convert AuthUser to User
+const convertAuthUserToUser = (authUser: AuthUser): User => ({
+  id: authUser.id,
+  email: authUser.email,
+  name: authUser.name,
+  avatar: authUser.avatar_url,
+  privacySettings: {
+    shareLocation: false,
+    allowAnonymous: true,
+    communityLevel: 'public' as const,
+  },
+  createdAt: authUser.created_at,
+  updatedAt: authUser.updated_at,
+});
 
 const initialState: AuthState = {
   user: null,
@@ -13,7 +28,10 @@ const initialState: AuthState = {
 // Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+  async (
+    credentials: { email: string; password: string },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await authService.login(credentials);
       return response;
@@ -25,7 +43,10 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: { email: string; password: string; name: string }, { rejectWithValue }) => {
+  async (
+    userData: { email: string; password: string; name: string },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await authService.register(userData);
       return response;
@@ -79,8 +100,8 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = convertAuthUserToUser(action.payload.user);
+        state.token = action.payload.session?.access_token || null;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -96,8 +117,8 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = convertAuthUserToUser(action.payload.user);
+        state.token = action.payload.session?.access_token || null;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -121,7 +142,7 @@ const authSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = convertAuthUserToUser(action.payload);
         state.error = null;
       })
       .addCase(updateProfile.rejected, (state, action) => {

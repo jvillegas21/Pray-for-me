@@ -36,11 +36,14 @@ export interface CommunityFilter {
 }
 
 export const communityService = {
-  async fetchCommunities(filters: CommunityFilter = {}): Promise<CommunityWithMembers[]> {
+  async fetchCommunities(
+    filters: CommunityFilter = {}
+  ): Promise<CommunityWithMembers[]> {
     try {
       let query = supabase
         .from('communities')
-        .select(`
+        .select(
+          `
           *,
           creator:profiles!communities_creator_id_fkey (
             id,
@@ -56,7 +59,8 @@ export const communityService = {
               avatar_url
             )
           )
-        `)
+        `
+        )
         .eq('is_private', false)
         .order('created_at', { ascending: false });
 
@@ -72,7 +76,7 @@ export const communityService = {
       }
 
       const { data, error } = await query;
-      
+
       if (error) {
         throw new Error(error.message);
       }
@@ -85,15 +89,18 @@ export const communityService = {
 
   async fetchMyCommunities(): Promise<CommunityWithMembers[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
 
       const { data, error } = await supabase
         .from('community_members')
-        .select(`
+        .select(
+          `
           community:communities (
             *,
             creator:profiles!communities_creator_id_fkey (
@@ -111,23 +118,28 @@ export const communityService = {
               )
             )
           )
-        `)
+        `
+        )
         .eq('user_id', user.id);
 
       if (error) {
         throw new Error(error.message);
       }
 
-      return (data?.map(item => item.community).filter(Boolean) as any) || [];
+      return (data?.map((item) => item.community).filter(Boolean) as any) || [];
     } catch (error: any) {
       throw new Error(error.message || 'Failed to fetch your communities');
     }
   },
 
-  async createCommunity(communityData: CreateCommunityData): Promise<Community> {
+  async createCommunity(
+    communityData: CreateCommunityData
+  ): Promise<Community> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -165,8 +177,10 @@ export const communityService = {
 
   async joinCommunity(communityId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -201,15 +215,13 @@ export const communityService = {
         }
       }
 
-      const { error } = await supabase
-        .from('community_members')
-        .insert([
-          {
-            community_id: communityId,
-            user_id: user.id,
-            joined_at: new Date().toISOString(),
-          },
-        ]);
+      const { error } = await supabase.from('community_members').insert([
+        {
+          community_id: communityId,
+          user_id: user.id,
+          joined_at: new Date().toISOString(),
+        },
+      ]);
 
       if (error) {
         throw new Error(error.message);
@@ -223,8 +235,10 @@ export const communityService = {
 
   async leaveCommunity(communityId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -249,7 +263,8 @@ export const communityService = {
     try {
       const { data, error } = await supabase
         .from('communities')
-        .select(`
+        .select(
+          `
           *,
           creator:profiles!communities_creator_id_fkey (
             id,
@@ -265,7 +280,8 @@ export const communityService = {
               avatar_url
             )
           )
-        `)
+        `
+        )
         .eq('id', id)
         .single();
 
@@ -279,10 +295,15 @@ export const communityService = {
     }
   },
 
-  async updateCommunity(id: string, updates: Partial<Community>): Promise<Community> {
+  async updateCommunity(
+    id: string,
+    updates: Partial<Community>
+  ): Promise<Community> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -310,8 +331,10 @@ export const communityService = {
 
   async deleteCommunity(id: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }
@@ -332,16 +355,19 @@ export const communityService = {
     }
   },
 
-  async getCommunityMembers(id: string): Promise<Array<{
-    id: string;
-    name: string;
-    avatar_url?: string;
-    joined_at: string;
-  }>> {
+  async getCommunityMembers(id: string): Promise<
+    Array<{
+      id: string;
+      name: string;
+      avatar_url?: string;
+      joined_at: string;
+    }>
+  > {
     try {
       const { data, error } = await supabase
         .from('community_members')
-        .select(`
+        .select(
+          `
           id,
           joined_at,
           user:profiles!community_members_user_id_fkey (
@@ -349,7 +375,8 @@ export const communityService = {
             name,
             avatar_url
           )
-        `)
+        `
+        )
         .eq('community_id', id)
         .order('joined_at', { ascending: true });
 
@@ -357,23 +384,28 @@ export const communityService = {
         throw new Error(error.message);
       }
 
-             return data?.map((member: any) => ({
-         id: member.user?.id || '',
-         name: member.user?.name || '',
-         avatar_url: member.user?.avatar_url,
-         joined_at: member.joined_at,
-       })) || [];
+      return (
+        data?.map((member: any) => ({
+          id: member.user?.id || '',
+          name: member.user?.name || '',
+          avatar_url: member.user?.avatar_url,
+          joined_at: member.joined_at,
+        })) || []
+      );
     } catch (error: any) {
       throw new Error(error.message || 'Failed to fetch community members');
     }
   },
 
   // Get communities by category
-  async getCommunitiesByCategory(category: string): Promise<CommunityWithMembers[]> {
+  async getCommunitiesByCategory(
+    category: string
+  ): Promise<CommunityWithMembers[]> {
     try {
       const { data, error } = await supabase
         .from('communities')
-        .select(`
+        .select(
+          `
           *,
           creator:profiles!communities_creator_id_fkey (
             id,
@@ -389,7 +421,8 @@ export const communityService = {
               avatar_url
             )
           )
-        `)
+        `
+        )
         .eq('category', category)
         .eq('is_private', false)
         .order('created_at', { ascending: false });
@@ -400,15 +433,19 @@ export const communityService = {
 
       return data || [];
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to fetch communities by category');
+      throw new Error(
+        error.message || 'Failed to fetch communities by category'
+      );
     }
   },
 
   // Check if user is a member of a community
   async isMemberOfCommunity(communityId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         return false;
       }
@@ -433,8 +470,10 @@ export const communityService = {
   // Remove member from community (admin only)
   async removeMember(communityId: string, userId: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         throw new Error('Not authenticated');
       }

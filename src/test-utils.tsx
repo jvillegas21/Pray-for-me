@@ -44,9 +44,7 @@ export const renderWithProviders = (
       <Provider store={store}>
         <PaperProvider theme={MD3LightTheme}>
           <SafeAreaProvider>
-            <NavigationContainer>
-              {children}
-            </NavigationContainer>
+            <NavigationContainer>{children}</NavigationContainer>
           </SafeAreaProvider>
         </PaperProvider>
       </Provider>
@@ -109,9 +107,9 @@ export const testCommunity = {
   description: 'A test community',
   location: {
     latitude: 40.7128,
-    longitude: -74.0060,
+    longitude: -74.006,
   },
   radius: 1000,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-}; 
+};
