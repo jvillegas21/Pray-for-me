@@ -190,7 +190,8 @@ const PrayerRequestScreen: React.FC = () => {
 
   const handleReport = (id: string) => {
     // TODO: Call backend API to report encouragement
-    alert('Reported encouragement!');
+    console.log('Reported encouragement with ID:', id);
+    // You can replace this with a proper toast notification or modal
   };
 
   const getUrgencyColor = () => {

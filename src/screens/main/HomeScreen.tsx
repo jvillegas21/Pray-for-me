@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -169,7 +169,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     } catch (error) {
       // Keep existing data if there's an error
     }
-  }, [dispatch]);
+  }, [dispatch, navigation, route?.params, previousRequestIds]);
 
   // Helper to load counts for specific requests
   const loadCountsForRequests = async (requestsToLoad: any[]) => {
@@ -205,7 +205,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
   // Load more requests for endless scroll
   const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore || loading) return; // Also check global loading state
+    if (loadingMore || !hasMore || loading) {
+      return; // Also check global loading state
+    }
     
     setLoadingMore(true);
     
@@ -242,7 +244,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, currentOffset, dispatch]);
+  }, [loadingMore, hasMore, currentOffset, dispatch, loading]);
 
   // Handle scroll to load more and update header
   const handleScroll = Animated.event(
@@ -263,7 +265,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   );
 
   // Improved scroll detection with better threshold and debouncing
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const lastLoadTimeRef = useRef<number>(0);
   
   const handleScrollEndReached = React.useCallback((event: any) => {

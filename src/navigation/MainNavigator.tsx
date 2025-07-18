@@ -55,29 +55,7 @@ const ProfileStack = () => (
 const MainNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
-          switch (route.name) {
-            case 'HomeTab':
-              iconName = 'home';
-              break;
-            case 'CommunitiesTab':
-              iconName = 'group';
-              break;
-            case 'MapTab':
-              iconName = 'map';
-              break;
-            case 'ProfileTab':
-              iconName = 'person';
-              break;
-            default:
-              iconName = 'home';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+      screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textTertiary,
         tabBarStyle: {
@@ -88,7 +66,7 @@ const MainNavigator: React.FC = () => {
           paddingTop: 8,
         },
         headerShown: false,
-      })}
+      }}
     >
       <Tab.Screen
         name="HomeTab"
@@ -96,6 +74,9 @@ const MainNavigator: React.FC = () => {
         options={{
           tabBarLabel: 'Home',
           tabBarBadge: undefined,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="home" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -103,6 +84,9 @@ const MainNavigator: React.FC = () => {
         component={CommunitiesStack}
         options={{
           tabBarLabel: 'Communities',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="group" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -110,6 +94,9 @@ const MainNavigator: React.FC = () => {
         component={MapScreen}
         options={{
           tabBarLabel: 'Map',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="map" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
@@ -117,6 +104,9 @@ const MainNavigator: React.FC = () => {
         component={ProfileStack}
         options={{
           tabBarLabel: 'Profile',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Icon name="person" size={size} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>

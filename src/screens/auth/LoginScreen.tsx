@@ -41,7 +41,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     try {
       await dispatch(login({ email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state
-    } catch (error) {
+    } catch (loginError) {
       setShowSnackbar(true);
     }
   };

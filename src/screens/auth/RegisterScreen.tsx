@@ -62,8 +62,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     try {
       await dispatch(register({ name, email, password })).unwrap();
       // Navigation will be handled by AppNavigator based on auth state
-    } catch (error) {
-      const errorMessage = error as string;
+    } catch (registerError) {
+      const errorMessage = registerError as string;
       if (errorMessage.includes('confirm your account')) {
         setSnackbarMessage(
           'Registration successful! Please check your email and confirm your account before signing in.'

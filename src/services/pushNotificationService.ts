@@ -182,7 +182,8 @@ export const pushNotificationService = {
   async getPermissionStatus(): Promise<boolean> {
     try {
       console.log('Getting permission status');
-      return false; // Placeholder
+      // TODO: Implement actual permission status check
+      throw new Error('Permission status check not implemented');
     } catch (error) {
       console.error('Get permission status failed:', error);
       return false;
@@ -214,7 +215,7 @@ export const pushNotificationService = {
     try {
       // OneSignal doesn't provide a direct API for notification history
       // You might need to track this in your backend or local storage
-      return [];
+      throw new Error('Notification history not implemented');
     } catch (error) {
       console.error('Get notification history failed:', error);
       return [];
