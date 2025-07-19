@@ -11,7 +11,7 @@ const LoadingScreen: React.FC = () => {
         size="large"
         color={theme.colors.primary}
       />
-      <Text style={styles.loadingText}>Loading...</Text>
+      <Text style={styles.loadingText}>Starting Amenity...</Text>
     </View>
   );
 };

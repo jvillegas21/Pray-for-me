@@ -1,14 +1,14 @@
 {
   "name": "TempApp",
-  "displayName": "Pray For Me",
-  "scheme": "prayforMe",
+  "displayName": "TempApp", 
+  "scheme": "tempapp",
   "ios": {
     "bundleIdentifier": "org.reactjs.native.example.TempApp",
     "infoPlist": {
       "CFBundleURLTypes": [
         {
-          "CFBundleURLName": "Pray For Me",
-          "CFBundleURLSchemes": ["prayforMe"]
+          "CFBundleURLName": "TempApp",
+          "CFBundleURLSchemes": ["tempapp"]
         }
       ]
     }
@@ -21,7 +21,7 @@
         "autoVerify": true,
         "data": [
           {
-            "scheme": "prayforMe"
+            "scheme": "tempapp"
           }
         ],
         "category": ["BROWSABLE", "DEFAULT"]
