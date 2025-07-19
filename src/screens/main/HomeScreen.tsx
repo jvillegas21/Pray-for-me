@@ -9,7 +9,6 @@ import {
   Dimensions,
   StatusBar,
   Pressable,
-  FlatList,
 } from 'react-native';
 
 // Helper function for relative time
@@ -67,9 +66,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [greeting, setGreeting] = useState('');
   const scrollY = useRef(new Animated.Value(0)).current;
-  const headerOpacity = useRef(new Animated.Value(1)).current;
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<any>(null);
-  const currentScrollPosition = useRef<number>(0);
+  const lastScrollY = useRef<number>(0);
+  const scrollDirection = useRef<'up' | 'down'>('down');
+  const headerHeight = 120; // Approximate header height
 
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -206,15 +207,57 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   };
 
 
-  // Handle scroll to update header
+  // Facebook-style header animation logic
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
-      useNativeDriver: false,
+      useNativeDriver: true,
       listener: (event: any) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        const opacity = Math.max(0, Math.min(1, 1 - offsetY / 100));
-        headerOpacity.setValue(opacity);
+        const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+        const currentScrollY = contentOffset.y;
+        const diff = currentScrollY - lastScrollY.current;
+        
+        // Determine scroll direction for header animation
+        if (diff > 0 && currentScrollY > 50) {
+          // Scrolling down/up (content moving up) - hide header
+          if (scrollDirection.current !== 'up') {
+            scrollDirection.current = 'up';
+            Animated.timing(headerTranslateY, {
+              toValue: -headerHeight,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+          }
+        } else if (diff < -5) {
+          // Scrolling up (content moving down) or swipe down - show header
+          if (scrollDirection.current !== 'down') {
+            scrollDirection.current = 'down';
+            Animated.timing(headerTranslateY, {
+              toValue: 0,
+              duration: 300,
+              useNativeDriver: true,
+            }).start();
+          }
+        }
+        
+        // Always show header when at top
+        if (currentScrollY <= 0) {
+          Animated.timing(headerTranslateY, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        }
+        
+        // Facebook-style infinite scroll detection
+        const paddingToBottom = 300;
+        const isNearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+        
+        if (isNearBottom && hasMore && !loadingMore) {
+          loadMoreRequests();
+        }
+        
+        lastScrollY.current = currentScrollY;
       },
     }
   );
@@ -418,14 +461,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
         style={styles.container}
       >
         <SafeAreaView style={styles.safeArea}>
-          {/* Animated Header */}
-          <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
+          {/* Facebook-style Animated Header */}
+          <Animated.View style={[styles.header, { 
+            transform: [{ translateY: headerTranslateY }],
+          }]}>
             <View style={styles.headerContent}>
-              <View style={styles.headerLeft}>
-                <Text style={styles.greeting}>{greeting},</Text>
-                <Text style={styles.userName}>{user?.name || 'Friend'}</Text>
-              </View>
-              <Pressable style={styles.profileButton}>
+              <Text style={styles.appName}>AMENITY</Text>
+              <Pressable 
+                style={styles.profileButton}
+                onPress={() => navigation.navigate('Profile')}
+              >
                 <Icon
                   name="account-circle"
                   size={32}
@@ -438,16 +483,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
           {/* Scrollable Content */}
           <Animated.ScrollView
             ref={scrollViewRef}
-            style={styles.scrollView}
+            style={[styles.scrollView, { paddingTop: headerHeight }]}
             contentContainerStyle={styles.scrollContent}
             onScroll={handleScroll}
-            scrollEventThrottle={8}
+            scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
                 tintColor={theme.colors.textOnDark}
                 colors={[theme.colors.primary]}
+                progressViewOffset={headerHeight}
               />
             }
             showsVerticalScrollIndicator={false}
@@ -502,15 +548,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
 
               {displayedRequests.length > 0 ? (
-                <FlatList
-                  data={displayedRequests}
-                  keyExtractor={(item) => `prayer-${item.id}`}
-                  renderItem={({ item: request, index }) => {
+                <>
+                  {displayedRequests.map((request, index) => {
                     const isNewlyAdded = newlyAddedCards.has(request.id);
                     const hasNewCardAbove = displayedRequests.slice(0, index).some(req => newlyAddedCards.has(req.id));
                     
                     return (
                       <AnimatedPrayerCard
+                        key={`prayer-${request.id}`}
                         index={index}
                         isNew={false}
                         isNewlyAdded={isNewlyAdded}
@@ -544,24 +589,16 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         }}
                       />
                     );
-                  }}
-                  onEndReached={loadMoreRequests}
-                  onEndReachedThreshold={0.3}
-                  ListFooterComponent={() => {
-                    if (loadingMore) {
-                      return (
-                        <View style={styles.loadingMore}>
-                          <PrayerCardSkeleton />
-                          <PrayerCardSkeleton />
-                        </View>
-                      );
-                    }
-                    return null;
-                  }}
-                  scrollEnabled={false}
-                  nestedScrollEnabled={false}
-                  style={styles.flatList}
-                />
+                  })}
+                  
+                  {/* Loading indicator for infinite scroll */}
+                  {loadingMore && (
+                    <View style={styles.loadMoreTrigger}>
+                      <PrayerCardSkeleton />
+                      <PrayerCardSkeleton />
+                    </View>
+                  )}
+                </>
               ) : loading ? (
                 // Show skeletons during initial load
                 <>
@@ -602,9 +639,17 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    height: 120,
+    backgroundColor: '#9D4EDD',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
+    justifyContent: 'flex-end',
   },
 
   headerContent: {
@@ -613,26 +658,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  headerLeft: {
-    flex: 1,
-  },
-
-  greeting: {
-    fontSize: 16,
-    color: theme.colors.textOnDark,
-    opacity: 0.8,
-    fontWeight: '500',
-  },
-
-  userName: {
+  appName: {
     fontSize: 24,
     fontWeight: '700',
     color: theme.colors.textOnDark,
-    marginTop: spacing.xs,
+    flex: 1,
+    textAlign: 'left',
   },
 
   profileButton: {
     padding: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Scroll Content
@@ -738,12 +775,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // FlatList styles
-  flatList: {
-    flex: 1,
-  },
-
-  loadingMore: {
+  // Load more styles
+  loadMoreTrigger: {
     paddingVertical: spacing.md,
   },
 
