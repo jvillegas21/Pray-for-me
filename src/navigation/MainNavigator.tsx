@@ -46,6 +46,13 @@ const CommunitiesStack = () => (
   </Stack.Navigator>
 );
 
+const MapStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Map" component={MapScreen} />
+    <Stack.Screen name="PrayerRequest" component={PrayerRequestScreen} />
+  </Stack.Navigator>
+);
+
 const ProfileStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Profile" component={ProfileScreen} />
@@ -93,7 +100,7 @@ const MainNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="MapTab"
-        component={MapScreen}
+        component={MapStack}
         options={{
           tabBarLabel: 'Map',
           tabBarIcon: ({ focused, color, size }) => (

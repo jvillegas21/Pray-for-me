@@ -1,8 +1,10 @@
 import Geolocation from '@react-native-community/geolocation';
 import { PermissionsAndroid, Platform } from 'react-native';
+// Note: In a production app, you would import from '@env'
 // import { MAPBOX_ACCESS_TOKEN } from '@env';
 
-const MAPBOX_ACCESS_TOKEN = '';
+// For demo purposes, using a public token - replace with your own
+const MAPBOX_ACCESS_TOKEN = process.env.MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoicHJheWZvcm1lYXBwIiwiYSI6ImNtNWF1bjNxdDAyYTQycnNhY202bXpsMjQifQ.xYK9uQhIy7HZz1ywb2XQAA';
 const MAPBOX_API_BASE = 'https://api.mapbox.com';
 
 export interface LocationCoordinates {
