@@ -78,14 +78,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     (state: RootState) => state.prayer
   );
   
-
-  // Facebook-style infinite scroll state
-  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
+  // Pagination state
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const ITEMS_PER_PAGE = 10;
-  
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
+  const ITEMS_PER_PAGE = 3;
+
   // State for encouragement and prayer counts
   const [encouragementCounts, setEncouragementCounts] = useState<{
     [id: string]: number;
@@ -99,6 +98,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const [newlyAddedCards, setNewlyAddedCards] = useState<Set<string>>(new Set());
   const [previousRequestIds, setPreviousRequestIds] = useState<string[]>([]);
 
+
   // Load initial page of requests
   const loadInitialRequests = React.useCallback(async (forceRefresh = false) => {
     try {
@@ -107,14 +107,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
         setDisplayedRequests([]);
         setEncouragementCounts({});
         setPrayerCounts({});
-        setCurrentPage(0);
+        setCurrentOffset(0);
         setHasMore(true);
       }
 
       // Fetch first page with pagination
       const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
-        offset: 0
+        offset: 0 
       })).unwrap();
       
       const latestRequests = result.data;
@@ -130,7 +130,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
       // Set displayed requests to first page
       setDisplayedRequests(latestRequests);
-      setCurrentPage(1);
+      setCurrentOffset(latestRequests.length);
       setHasMore(latestRequests.length === ITEMS_PER_PAGE);
 
       // Detect newly added prayers using navigation param and array comparison
@@ -206,6 +206,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     setPrayerCounts(prev => ({...prev, ...newPrayerCounts}));
   };
 
+  // Facebook-style load more function
+  const loadMoreRequests = React.useCallback(async () => {
+    if (loadingMore || !hasMore) {
+      return;
+    }
+    
+    setLoadingMore(true);
+    
+    try {
+      const result = await dispatch(fetchPrayerRequests({
+        limit: ITEMS_PER_PAGE,
+        offset: currentOffset
+      })).unwrap();
+      
+      const newRequests = result.data;
+      
+      if (!newRequests || newRequests.length === 0) {
+        setHasMore(false);
+      } else {
+        // Append new requests to existing list
+        setDisplayedRequests(prev => [...prev, ...newRequests]);
+        setCurrentOffset(prev => prev + newRequests.length);
+        setHasMore(newRequests.length === ITEMS_PER_PAGE);
+        
+        // Load counts for new requests
+        await loadCountsForRequests(newRequests);
+      }
+    } catch (error) {
+      console.error('Error loading more requests:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, currentOffset, dispatch]);
 
   // Facebook-style header animation logic
   const handleScroll = Animated.event(
@@ -310,49 +343,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     }
   };
 
-  // Facebook-style load more function
-  const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore) {
-      return;
-    }
-    
-    setLoadingMore(true);
-    
-    try {
-      const result = await dispatch(fetchPrayerRequests({
-        limit: ITEMS_PER_PAGE,
-        offset: currentPage * ITEMS_PER_PAGE
-      })).unwrap();
-      
-      const newRequests = result.data;
-      
-      if (!newRequests || newRequests.length === 0) {
-        setHasMore(false);
-      } else {
-        // Append new requests to existing list
-        setDisplayedRequests(prev => [...prev, ...newRequests]);
-        setCurrentPage(prev => prev + 1);
-        setHasMore(newRequests.length === ITEMS_PER_PAGE);
-        
-        // Load counts for new requests
-        await loadCountsForRequests(newRequests);
-      }
-    } catch (error) {
-      console.error('Error loading more requests:', error);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, currentPage, dispatch]);
   
   // Use useFocusEffect to always fetch fresh data (but avoid over-fetching)
   useFocusEffect(
     React.useCallback(() => {
       // Only load if we don't have data or if enough time has passed
+      // Also prevent interference with endless scroll loading
       const timeSinceLastRefresh = Date.now() - lastRefreshTime;
-      if (displayedRequests.length === 0 || timeSinceLastRefresh > 5000) {
+      if (displayedRequests.length === 0 || (timeSinceLastRefresh > 5000 && !loadingMore)) {
         loadInitialRequests();
       }
-    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime])
+    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime, loadingMore])
   );
 
   // Additional navigation listener as backup
@@ -565,6 +566,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         description={request.description}
                         category={request.category}
                         urgency={request.urgency}
+                        status={request.status}
                         timeAgo={
                           request.createdAt
                             ? getRelativeTime(request.createdAt)
@@ -615,7 +617,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                     Be the first to share a prayer request
                   </Text>
                 </View>
-              )}
+                            )}
             </View>
 
 
@@ -779,7 +781,6 @@ const styles = StyleSheet.create({
   loadMoreTrigger: {
     paddingVertical: spacing.md,
   },
-
 });
 
 export default HomeScreen;

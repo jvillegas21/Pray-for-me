@@ -526,7 +526,19 @@ export const prayerService = {
       }
 
       return {
-        ...data,
+        id: data.id,
+        userId: data.user_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        urgency: data.urgency_level,
+        isAnonymous: data.is_anonymous,
+        location: data.location,
+        tags: data.tags || [],
+        status: data.status,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        expiresAt: data.expires_at,
         user: userProfile || {
           id: data.user_id,
           name: 'Unknown User',
@@ -694,6 +706,7 @@ export const prayerService = {
         .from('prayer_requests')
         .update({
           is_answered: true,
+          status: 'answered',
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

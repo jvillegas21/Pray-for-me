@@ -41,6 +41,7 @@ interface PrayerCardProps {
   encouragementCount?: number;
   prayerCount?: number;
   isAnonymous: boolean;
+  status?: 'active' | 'answered' | 'closed';
   onPress: () => void;
   onSupport: () => void;
   onShare: () => void;
@@ -60,6 +61,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
   encouragementCount = 0,
   prayerCount = 0,
   isAnonymous,
+  status = 'active',
   onPress,
   onSupport,
   onShare,
@@ -237,6 +239,19 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
                 />
                 <Text style={styles.categoryText}>{category}</Text>
               </View>
+              
+              {/* Answered Status Badge */}
+              {status === 'answered' && (
+                <View style={styles.answeredBadge}>
+                  <Icon
+                    name="check-circle"
+                    size={16}
+                    color={theme.colors.success}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={styles.answeredBadgeText}>Answered</Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -384,6 +399,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: theme.colors.textSecondary,
     marginLeft: spacing.xs,
+  },
+
+  // Answered Status Badge Styles
+  answeredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.rounded,
+    borderWidth: 1,
+    borderColor: theme.colors.success,
+  },
+
+  answeredBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: theme.colors.success,
   },
 
   timeAgo: {
