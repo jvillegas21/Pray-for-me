@@ -470,7 +470,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
               <Text style={styles.appName}>AMENITY</Text>
               <Pressable 
                 style={styles.profileButton}
-                onPress={() => navigation.navigate('Profile')}
+                onPress={() => navigation.navigate('ProfileTab')}
               >
                 <Icon
                   name="account-circle"
