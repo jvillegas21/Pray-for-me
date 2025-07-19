@@ -98,35 +98,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const [newlyAddedCards, setNewlyAddedCards] = useState<Set<string>>(new Set());
   const [previousRequestIds, setPreviousRequestIds] = useState<string[]>([]);
 
-  // Helper to load next page of requests for endless scroll
-  const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore) return;
-    
-    setLoadingMore(true);
-    try {
-      const nextOffset = displayedRequests.length;
-      const response = await dispatch(fetchPrayerRequests({
-        offset: nextOffset,
-        limit: ITEMS_PER_PAGE
-      })).unwrap();
-      
-      if (response.data && response.data.length > 0) {
-        setDisplayedRequests(prev => [...prev, ...response.data]);
-        setCurrentOffset(nextOffset + response.data.length);
-        
-        // If we got fewer items than requested, we've reached the end
-        if (response.data.length < ITEMS_PER_PAGE) {
-          setHasMore(false);
-        }
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error('Error loading more requests:', error);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, displayedRequests.length, dispatch]);
 
   // Load initial page of requests
   const loadInitialRequests = React.useCallback(async (forceRefresh = false) => {
@@ -136,7 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
         setDisplayedRequests([]);
         setEncouragementCounts({});
         setPrayerCounts({});
-        setCurrentPage(0);
+        setCurrentOffset(0);
         setHasMore(true);
       }
 
@@ -159,7 +130,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
       // Set displayed requests to first page
       setDisplayedRequests(latestRequests);
-      setCurrentPage(1);
+      setCurrentOffset(latestRequests.length);
       setHasMore(latestRequests.length === ITEMS_PER_PAGE);
 
       // Detect newly added prayers using navigation param and array comparison
@@ -235,16 +206,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     setPrayerCounts(prev => ({...prev, ...newPrayerCounts}));
   };
 
-  // Load more requests for endless scroll
+  // Facebook-style load more function
   const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore || loading) {
-      return; // Also check global loading state
+    if (loadingMore || !hasMore) {
+      return;
     }
     
     setLoadingMore(true);
     
     try {
-      // Fetch next page from server
       const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
         offset: currentOffset
@@ -254,31 +224,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       
       if (!newRequests || newRequests.length === 0) {
         setHasMore(false);
-        setLoadingMore(false);
-        return;
+      } else {
+        // Append new requests to existing list
+        setDisplayedRequests(prev => [...prev, ...newRequests]);
+        setCurrentOffset(prev => prev + newRequests.length);
+        setHasMore(newRequests.length === ITEMS_PER_PAGE);
+        
+        // Load counts for new requests
+        await loadCountsForRequests(newRequests);
       }
-
-      // Don't animate pagination cards - they should just appear normally
-
-      // Update local state by appending new requests
-      setDisplayedRequests(prev => [...prev, ...newRequests]);
-      setCurrentOffset(prev => prev + newRequests.length);
-      setHasMore(newRequests.length === ITEMS_PER_PAGE);
-      
-      // Load counts asynchronously
-      setTimeout(() => {
-        loadCountsForRequests(newRequests);
-      }, 0);
-      
     } catch (error) {
       console.error('Error loading more requests:', error);
-      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, currentOffset, dispatch, loading]);
+  }, [loadingMore, hasMore, currentOffset, dispatch]);
 
-  // Handle scroll to load more and update header
+  // Facebook-style header animation logic
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
@@ -381,39 +343,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     }
   };
 
-  // Facebook-style load more function
-  const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore) {
-      return;
-    }
-    
-    setLoadingMore(true);
-    
-    try {
-      const result = await dispatch(fetchPrayerRequests({
-        limit: ITEMS_PER_PAGE,
-        offset: currentPage * ITEMS_PER_PAGE
-      })).unwrap();
-      
-      const newRequests = result.data;
-      
-      if (!newRequests || newRequests.length === 0) {
-        setHasMore(false);
-      } else {
-        // Append new requests to existing list
-        setDisplayedRequests(prev => [...prev, ...newRequests]);
-        setCurrentPage(prev => prev + 1);
-        setHasMore(newRequests.length === ITEMS_PER_PAGE);
-        
-        // Load counts for new requests
-        await loadCountsForRequests(newRequests);
-      }
-    } catch (error) {
-      console.error('Error loading more requests:', error);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, currentPage, dispatch]);
   
   // Use useFocusEffect to always fetch fresh data (but avoid over-fetching)
   useFocusEffect(
@@ -690,33 +619,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                             )}
             </View>
 
-            {/* Community Suggestions */}
-            <View style={styles.communityContainer}>
-              <Text style={styles.sectionTitle}>Suggested Communities</Text>
-              <GlassCard variant="elevated" style={styles.communityCard}>
-                <LinearGradient
-                  colors={gradients.peace}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.communityBanner}
-                >
-                  <Icon name="groups" size={32} color={theme.colors.textOnDark} />
-                </LinearGradient>
-                <View style={styles.communityContent}>
-                  <Text style={styles.communityTitle}>Local Faith Community</Text>
-                  <Text style={styles.communityDescription}>
-                    Join 127 members in your area for prayer and support
-                  </Text>
-                  <GradientButton
-                    title="Join Community"
-                    onPress={() => navigation.navigate('CommunitiesTab')}
-                    variant="peace"
-                    size="small"
-                    style={styles.joinButton}
-                  />
-                </View>
-              </GlassCard>
-            </View>
 
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
@@ -874,42 +776,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Community
-  communityContainer: {
-    marginBottom: spacing.xl,
-  },
-
-  communityCard: {
-    marginHorizontal: spacing.lg,
-    overflow: 'hidden',
-  },
-
-  communityBanner: {
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  communityContent: {
-    padding: spacing.lg,
-  },
-
-  communityTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: spacing.sm,
-  },
-
-  communityDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-
-  joinButton: {
-    alignSelf: 'flex-start',
+  // Load more styles
+  loadMoreTrigger: {
+    paddingVertical: spacing.md,
   },
 });
 
