@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -17,10 +17,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NavigationProps } from '@/types';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@/store';
-import { getCurrentLocation } from '@/store/slices/locationSlice';
-import { locationService } from '@/services/locationService';
 import { aiService, PrayerAnalysisRequest } from '@/services/aiService';
 
 const CATEGORIES = [
@@ -67,8 +63,6 @@ export default function CreatePrayerRequestScreen() {
     useNavigation<
       NativeStackNavigationProp<NavigationProps, 'CreatePrayerRequest'>
     >();
-  const dispatch = useDispatch<AppDispatch>();
-
   const [prayerText, setPrayerText] = useState('');
   const [category, setCategory] = useState('');
   const [anonymous, setAnonymous] = useState(false);
@@ -81,65 +75,8 @@ export default function CreatePrayerRequestScreen() {
   const [shareInstagram, setShareInstagram] = useState(false);
   const [bibleStudy, setBibleStudy] = useState(false);
   const [resourceRec, setResourceRec] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
 
-  const { current: currentLocation, permission } = useSelector(
-    (state: RootState) => state.location
-  );
-
-  // Auto-fill location when component mounts if permission is granted and saved location exists
-  useEffect(() => {
-    if (permission === 'granted' && currentLocation && !city && !state && !country) {
-      autofillLocation();
-    }
-  }, [permission, currentLocation, city, state, country]);
-
-  const autofillLocation = async () => {
-    if (!currentLocation) return;
-    
-    setLocationLoading(true);
-    try {
-      // Use reverse geocoding to get address
-      const addressInfo = await locationService.reverseGeocode(
-        currentLocation.latitude,
-        currentLocation.longitude
-      );
-      
-      if (addressInfo) {
-        setCity(addressInfo.city || '');
-        setState(addressInfo.state || '');
-        setCountry(addressInfo.country || '');
-      }
-    } catch (error) {
-      console.log('Error getting location details:', error);
-      // Fallback to just showing that location is detected
-      setCity('Your location');
-      setState('');
-      setCountry('');
-    } finally {
-      setLocationLoading(false);
-    }
-  };
-
-  const handleLocationRefresh = async () => {
-    if (permission !== 'granted') {
-      Alert.alert(
-        'Location Permission Required',
-        'Please enable location services to auto-fill your location.'
-      );
-      return;
-    }
-
-    setLocationLoading(true);
-    try {
-      await dispatch(getCurrentLocation()).unwrap();
-      await autofillLocation();
-    } catch (error) {
-      Alert.alert('Error', 'Unable to get your current location.');
-    } finally {
-      setLocationLoading(false);
-    }
-  };
+  // TODO: Implement geolocation autofill
 
   const handleSubmit = async () => {
     if (!prayerText.trim()) {
@@ -301,47 +238,14 @@ export default function CreatePrayerRequestScreen() {
             </Text>
           </View>
         </View>
-        <View style={{ 
-          flexDirection: 'row', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: spacing.sm 
-        }}>
-          <Text
-            style={[
-              theme.fonts.bodyLarge as TextStyle,
-              { color: theme.colors.text },
-            ]}
-          >
-            Location
-          </Text>
-          <TouchableOpacity
-            onPress={handleLocationRefresh}
-            disabled={locationLoading}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              padding: spacing.sm,
-              backgroundColor: theme.colors.primaryContainer,
-              borderRadius: borderRadius.sm,
-              opacity: locationLoading ? 0.6 : 1,
-            }}
-          >
-            <Icon 
-              name={locationLoading ? "refresh" : "my-location"} 
-              size={16} 
-              color={theme.colors.primary}
-              style={{ marginRight: spacing.xs }}
-            />
-            <Text style={{ 
-              color: theme.colors.primary, 
-              fontSize: 12,
-              fontWeight: '500'
-            }}>
-              {locationLoading ? 'Getting...' : 'Use My Location'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Text
+          style={[
+            theme.fonts.bodyLarge as TextStyle,
+            { color: theme.colors.text, marginBottom: spacing.sm },
+          ]}
+        >
+          Location
+        </Text>
         <View style={{ flexDirection: 'row', marginBottom: spacing.lg }}>
           <TextInput
             style={{

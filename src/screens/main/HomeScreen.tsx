@@ -45,7 +45,6 @@ import {
 } from '@/theme';
 import { RootState, AppDispatch } from '@/store';
 import { fetchPrayerRequests } from '@/store/slices/prayerSlice';
-import { getCurrentLocation, requestLocationPermission } from '@/store/slices/locationSlice';
 import PrayerCard from '@/components/PrayerCard';
 import AnimatedPrayerCard from '@/components/AnimatedPrayerCard';
 import PrayerCardSkeleton from '@/components/PrayerCardSkeleton';
@@ -78,16 +77,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const { requests, loading, lastRefresh } = useSelector(
     (state: RootState) => state.prayer
   );
-  const { current: currentLocation, permission } = useSelector(
-    (state: RootState) => state.location
-  );
   
-  // Pagination state for true endless scroll
+  // Pagination state
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentOffset, setCurrentOffset] = useState(0);
   const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 3;
 
   // State for encouragement and prayer counts
   const [encouragementCounts, setEncouragementCounts] = useState<{
@@ -111,10 +107,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       const nextOffset = displayedRequests.length;
       const response = await dispatch(fetchPrayerRequests({
         offset: nextOffset,
-        limit: ITEMS_PER_PAGE,
-        latitude: currentLocation?.latitude,
-        longitude: currentLocation?.longitude,
-        radius: 10 // 10km radius
+        limit: ITEMS_PER_PAGE
       })).unwrap();
       
       if (response.data && response.data.length > 0) {
@@ -150,10 +143,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       // Fetch first page with pagination
       const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
-        offset: 0,
-        latitude: currentLocation?.latitude,
-        longitude: currentLocation?.longitude,
-        radius: 10 // 10km radius
+        offset: 0 
       })).unwrap();
       
       const latestRequests = result.data;
@@ -257,10 +247,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       // Fetch next page from server
       const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
-        offset: currentOffset,
-        latitude: currentLocation?.latitude,
-        longitude: currentLocation?.longitude,
-        radius: 10 // 10km radius
+        offset: currentOffset
       })).unwrap();
       
       const newRequests = result.data;
@@ -431,29 +418,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   // Use useFocusEffect to always fetch fresh data (but avoid over-fetching)
   useFocusEffect(
     React.useCallback(() => {
-      // Request location permission and get current location if not already available
-      const initWithLocation = async () => {
-        if (permission === 'pending' || !currentLocation) {
-          try {
-            const result = await dispatch(requestLocationPermission()).unwrap();
-            if (result === 'granted') {
-              await dispatch(getCurrentLocation()).unwrap();
-            }
-          } catch (error) {
-            console.log('Location permission denied or error');
-          }
-        }
-        
-        // Only load if we don't have data or if enough time has passed
-        // Also prevent interference with endless scroll loading
-        const timeSinceLastRefresh = Date.now() - lastRefreshTime;
-        if (displayedRequests.length === 0 || (timeSinceLastRefresh > 5000 && !loadingMore)) {
-          loadInitialRequests();
-        }
-      };
-      
-      initWithLocation();
-    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime, loadingMore, permission, currentLocation, dispatch])
+      // Only load if we don't have data or if enough time has passed
+      // Also prevent interference with endless scroll loading
+      const timeSinceLastRefresh = Date.now() - lastRefreshTime;
+      if (displayedRequests.length === 0 || (timeSinceLastRefresh > 5000 && !loadingMore)) {
+        loadInitialRequests();
+      }
+    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime, loadingMore])
   );
 
   // Additional navigation listener as backup
@@ -716,10 +687,36 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                     Be the first to share a prayer request
                   </Text>
                 </View>
-              )}
+                            )}
             </View>
 
-
+            {/* Community Suggestions */}
+            <View style={styles.communityContainer}>
+              <Text style={styles.sectionTitle}>Suggested Communities</Text>
+              <GlassCard variant="elevated" style={styles.communityCard}>
+                <LinearGradient
+                  colors={gradients.peace}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.communityBanner}
+                >
+                  <Icon name="groups" size={32} color={theme.colors.textOnDark} />
+                </LinearGradient>
+                <View style={styles.communityContent}>
+                  <Text style={styles.communityTitle}>Local Faith Community</Text>
+                  <Text style={styles.communityDescription}>
+                    Join 127 members in your area for prayer and support
+                  </Text>
+                  <GradientButton
+                    title="Join Community"
+                    onPress={() => navigation.navigate('CommunitiesTab')}
+                    variant="peace"
+                    size="small"
+                    style={styles.joinButton}
+                  />
+                </View>
+              </GlassCard>
+            </View>
 
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
@@ -877,7 +874,43 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Community
+  communityContainer: {
+    marginBottom: spacing.xl,
+  },
 
+  communityCard: {
+    marginHorizontal: spacing.lg,
+    overflow: 'hidden',
+  },
+
+  communityBanner: {
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  communityContent: {
+    padding: spacing.lg,
+  },
+
+  communityTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: spacing.sm,
+  },
+
+  communityDescription: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+
+  joinButton: {
+    alignSelf: 'flex-start',
+  },
 });
 
 export default HomeScreen;
