@@ -273,7 +273,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
               <Text style={styles.bullet}> • </Text>
               <Text style={styles.timeAgoInline}>{timeAgo}</Text>
             </View>
-            <Text style={styles.description} numberOfLines={3}>
+            <Text style={styles.description} numberOfLines={3} ellipsizeMode="tail">
               {description}
             </Text>
           </View>
