@@ -566,6 +566,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         description={request.description}
                         category={request.category}
                         urgency={request.urgency}
+                        status={request.status}
                         timeAgo={
                           request.createdAt
                             ? getRelativeTime(request.createdAt)

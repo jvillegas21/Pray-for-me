@@ -25,9 +25,12 @@ import {
   addPrayerAction,
   getPrayerCount,
   hasUserPrayed,
+  prayerService,
 } from '@/services/prayerService';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store';
 import { triggerRefresh } from '@/store/slices/prayerSlice';
+import AnsweredPrayerCelebration from '@/components/AnsweredPrayerCelebration';
 
 type PrayerRequestScreenNavigationProp = NativeStackNavigationProp<
   NavigationProps,
@@ -51,6 +54,7 @@ const PrayerRequestScreen: React.FC = () => {
   const { requestId } = route.params || {};
   const heartAnimationRef = useRef<LottieView>(null);
   const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // State for real data
   const [prayerRequest, setPrayerRequest] = useState<any>(null);
@@ -61,6 +65,8 @@ const PrayerRequestScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [prayerCount, setPrayerCount] = useState(0);
   const [hasPrayed, setHasPrayed] = useState(false);
+  const [markingAnswered, setMarkingAnswered] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Play heart animation when encouragement count increases
   useEffect(() => {
@@ -185,6 +191,36 @@ const PrayerRequestScreen: React.FC = () => {
       dispatch(triggerRefresh());
     } catch (error) {
       // Error adding prayer action
+    }
+  };
+
+  const handleMarkAsAnswered = async () => {
+    if (!prayerRequest || markingAnswered) {
+      return;
+    }
+
+    setMarkingAnswered(true);
+    
+    try {
+      await prayerService.markAsAnswered(prayerRequest.id);
+      
+      // Update local state
+      setPrayerRequest(prev => ({
+        ...prev,
+        status: 'answered'
+      }));
+      
+      // Trigger refresh to update other screens
+      dispatch(triggerRefresh());
+      
+      // Show celebration animation
+      setShowCelebration(true);
+      
+    } catch (error) {
+      console.error('Error marking prayer as answered:', error);
+      // Could show an error alert here
+    } finally {
+      setMarkingAnswered(false);
     }
   };
 
@@ -315,6 +351,19 @@ const PrayerRequestScreen: React.FC = () => {
             </View>
             <Text style={styles.description}>{prayerRequest.description}</Text>
           </View>
+          {/* Answered Status Banner */}
+          {prayerRequest.status === 'answered' && (
+            <View style={styles.answeredBanner}>
+              <Icon
+                name="check-circle"
+                size={20}
+                color={theme.colors.success}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.answeredText}>This prayer has been answered! ✨</Text>
+            </View>
+          )}
+
           <View style={styles.fbFooter}>
             <View style={styles.fbFooterAction} pointerEvents="none">
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -365,6 +414,27 @@ const PrayerRequestScreen: React.FC = () => {
               </Text>
             </Pressable>
           </View>
+
+          {/* Mark as Answered Button - Only show for prayer creator and if not already answered */}
+          {user && String(prayerRequest.userId) === String(user.id) && prayerRequest.status !== 'answered' && (
+            <View style={styles.markAnsweredContainer}>
+              <TouchableOpacity
+                style={[styles.markAnsweredButton, markingAnswered && styles.markAnsweredButtonDisabled]}
+                onPress={handleMarkAsAnswered}
+                disabled={markingAnswered}
+              >
+                <Icon
+                  name="check-circle-outline"
+                  size={20}
+                  color={markingAnswered ? theme.colors.disabled : theme.colors.success}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={[styles.markAnsweredButtonText, markingAnswered && styles.markAnsweredButtonTextDisabled]}>
+                  {markingAnswered ? 'Marking as Answered...' : 'Mark as Answered'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Community Encouragements */}
@@ -431,6 +501,18 @@ const PrayerRequestScreen: React.FC = () => {
 
         <View style={styles.bottomSpacing} />
       </ScrollView>
+      
+      {/* Celebration Animation */}
+      <AnsweredPrayerCelebration
+        visible={showCelebration}
+        onComplete={() => {
+          setShowCelebration(false);
+          // Navigate back after celebration
+          setTimeout(() => {
+            navigation.goBack();
+          }, 500);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -680,6 +762,60 @@ const styles = StyleSheet.create({
   fbFooterText: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+  },
+
+  // Answered Status Styles
+  answeredBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.success,
+  },
+
+  answeredText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.success,
+    flex: 1,
+  },
+
+  // Mark as Answered Button Styles
+  markAnsweredContainer: {
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+  },
+
+  markAnsweredButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
+    borderColor: theme.colors.success,
+  },
+
+  markAnsweredButtonDisabled: {
+    backgroundColor: theme.colors.surfaceVariant,
+    borderColor: theme.colors.disabled,
+  },
+
+  markAnsweredButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.success,
+  },
+
+  markAnsweredButtonTextDisabled: {
+    color: theme.colors.disabled,
   },
 });
 

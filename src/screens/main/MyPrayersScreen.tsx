@@ -67,6 +67,7 @@ const MyPrayersScreen: React.FC = () => {
       description={item.description}
       category={item.category}
       urgency={item.urgency}
+      status={item.status}
       timeAgo={item.createdAt}
       responseCount={item.responses?.length || 0}
       encouragementCount={item.encouragements?.length || 0}
