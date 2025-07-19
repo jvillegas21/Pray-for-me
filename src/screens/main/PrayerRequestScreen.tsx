@@ -67,6 +67,7 @@ const PrayerRequestScreen: React.FC = () => {
   const [hasPrayed, setHasPrayed] = useState(false);
   const [markingAnswered, setMarkingAnswered] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [sortNewestFirst, setSortNewestFirst] = useState(true);
 
   // Play heart animation when encouragement count increases
   useEffect(() => {
@@ -93,7 +94,7 @@ const PrayerRequestScreen: React.FC = () => {
           getRequestById(requestId).catch((error) => {
             return null;
           }),
-          getEncouragements(requestId).catch((error) => {
+          getEncouragements(requestId, sortNewestFirst).catch((error) => {
             return [];
           }),
           getEncouragementCount(requestId).catch((error) => {
@@ -125,7 +126,7 @@ const PrayerRequestScreen: React.FC = () => {
       }
     };
     fetchData();
-  }, [requestId]);
+  }, [requestId, sortNewestFirst]);
 
   // Real-time subscription disabled due to CHANNEL_ERROR issues
   // Using Redux refresh triggers and navigation-based refresh instead
@@ -147,7 +148,7 @@ const PrayerRequestScreen: React.FC = () => {
 
       // Re-fetch encouragements and count to ensure consistency
       const [encs, count] = await Promise.all([
-        getEncouragements(prayerRequest.id).catch((error) => {
+        getEncouragements(prayerRequest.id, sortNewestFirst).catch((error) => {
           console.error('❌ Error re-fetching encouragements:', error);
           return encouragements; // Keep existing encouragements on error
         }),
@@ -439,7 +440,23 @@ const PrayerRequestScreen: React.FC = () => {
 
         {/* Community Encouragements */}
         <View style={[styles.card, shadows.medium]}>
-          <Text style={styles.cardTitle}>Community Encouragements</Text>
+          <View style={styles.encouragementsHeader}>
+            <Text style={styles.cardTitle}>Community Encouragements</Text>
+            <TouchableOpacity
+              style={styles.sortToggle}
+              onPress={() => setSortNewestFirst(!sortNewestFirst)}
+            >
+              <Icon
+                name={sortNewestFirst ? "arrow-downward" : "arrow-upward"}
+                size={16}
+                color={theme.colors.textSecondary}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.sortText}>
+                {sortNewestFirst ? "Newest" : "Oldest"}
+              </Text>
+            </TouchableOpacity>
+          </View>
           {encouragements.length === 0 ? (
             <Text style={styles.emptyText}>
               No encouragements yet. Be the first to encourage!
@@ -454,9 +471,27 @@ const PrayerRequestScreen: React.FC = () => {
                     {(() => {
                       const dateStr = enc.createdAt;
                       const date = dateStr ? new Date(dateStr) : null;
-                      return date && !isNaN(date.getTime())
-                        ? date.toLocaleString()
-                        : 'Unknown date';
+                      
+                      if (!date || isNaN(date.getTime())) {
+                        return 'Unknown date';
+                      }
+                      
+                      const now = new Date();
+                      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+                      
+                      if (diffInMinutes < 1) {
+                        return 'Just now';
+                      } else if (diffInMinutes < 60) {
+                        return `${diffInMinutes}m ago`;
+                      } else if (diffInMinutes < 1440) { // Less than 24 hours
+                        const hours = Math.floor(diffInMinutes / 60);
+                        return `${hours}h ago`;
+                      } else if (diffInMinutes < 10080) { // Less than 7 days
+                        const days = Math.floor(diffInMinutes / 1440);
+                        return `${days}d ago`;
+                      } else {
+                        return date.toLocaleDateString();
+                      }
                     })()}
                   </Text>
                   <TouchableOpacity onPress={() => handleReport(enc.id)}>
@@ -816,6 +851,27 @@ const styles = StyleSheet.create({
 
   markAnsweredButtonTextDisabled: {
     color: theme.colors.disabled,
+  },
+
+  // New styles for sort toggle
+  encouragementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  sortToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surfaceVariant,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  sortText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
   },
 });
 

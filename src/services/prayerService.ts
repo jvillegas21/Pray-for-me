@@ -874,7 +874,7 @@ export const submitEncouragement = async (encouragementData: {
   }
 };
 
-export const getEncouragements = async (prayerRequestId: string) => {
+export const getEncouragements = async (prayerRequestId: string, sortNewestFirst: boolean = true) => {
   try {
     const { data, error } = await supabase
       .from('encouragements')
@@ -889,14 +889,28 @@ export const getEncouragements = async (prayerRequestId: string) => {
       `
       )
       .eq('prayer_request_id', prayerRequestId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: !sortNewestFirst });
 
     if (error) {
       // Error fetching encouragements:', error);
       return [];
     }
 
-    return data || [];
+    // Map database fields to camelCase to match the Encouragement interface
+    const mappedData = (data || []).map((encouragement: any) => ({
+      id: encouragement.id,
+      prayerRequestId: encouragement.prayer_request_id,
+      userId: encouragement.user_id,
+      message: encouragement.message,
+      createdAt: encouragement.created_at,
+      isAnonymous: encouragement.is_anonymous,
+      moderationStatus: encouragement.moderation_status,
+      flaggedBy: encouragement.flagged_by,
+      flaggedReason: encouragement.flagged_reason,
+      user: encouragement.users
+    }));
+
+    return mappedData;
   } catch (error: any) {
     // Error in getEncouragements:', error);
     return [];
