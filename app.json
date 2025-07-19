@@ -1,27 +1,27 @@
 {
-  "name": "Amenity",
-  "displayName": "Amenity",
-  "scheme": "amenity",
+  "name": "TempApp",
+  "displayName": "TempApp", 
+  "scheme": "tempapp",
   "ios": {
-    "bundleIdentifier": "org.reactjs.native.example.Amenity",
+    "bundleIdentifier": "org.reactjs.native.example.TempApp",
     "infoPlist": {
       "CFBundleURLTypes": [
         {
-          "CFBundleURLName": "Amenity",
-          "CFBundleURLSchemes": ["amenity"]
+          "CFBundleURLName": "TempApp",
+          "CFBundleURLSchemes": ["tempapp"]
         }
       ]
     }
   },
   "android": {
-    "package": "org.reactjs.native.example.Amenity",
+    "package": "org.reactjs.native.example.TempApp",
     "intentFilters": [
       {
         "action": "VIEW",
         "autoVerify": true,
         "data": [
           {
-            "scheme": "amenity"
+            "scheme": "tempapp"
           }
         ],
         "category": ["BROWSABLE", "DEFAULT"]

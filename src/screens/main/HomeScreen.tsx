@@ -9,6 +9,7 @@ import {
   Dimensions,
   StatusBar,
   Pressable,
+  FlatList,
 } from 'react-native';
 
 // Helper function for relative time
@@ -76,13 +77,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     (state: RootState) => state.prayer
   );
   
-  // Pagination state
+
+  // Facebook-style infinite scroll state
+  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [currentOffset, setCurrentOffset] = useState(0);
-  const [displayedRequests, setDisplayedRequests] = useState<any[]>([]);
-  const ITEMS_PER_PAGE = 3;
-
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 10;
+  
   // State for encouragement and prayer counts
   const [encouragementCounts, setEncouragementCounts] = useState<{
     [id: string]: number;
@@ -96,38 +98,38 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
   const [newlyAddedCards, setNewlyAddedCards] = useState<Set<string>>(new Set());
   const [previousRequestIds, setPreviousRequestIds] = useState<string[]>([]);
 
-  // Helper to load initial page of requests
+  // Load initial page of requests
   const loadInitialRequests = React.useCallback(async (forceRefresh = false) => {
     try {
       // Clear existing data if forcing refresh
       if (forceRefresh) {
+        setDisplayedRequests([]);
         setEncouragementCounts({});
         setPrayerCounts({});
-        setCurrentOffset(0);
+        setCurrentPage(0);
         setHasMore(true);
-        setDisplayedRequests([]);
       }
 
-      // Fetch first page with limit
-      const result = await dispatch(fetchPrayerRequests({ 
+      // Fetch first page with pagination
+      const result = await dispatch(fetchPrayerRequests({
         limit: ITEMS_PER_PAGE,
-        offset: 0 
+        offset: 0
       })).unwrap();
       
       const latestRequests = result.data;
 
       if (!latestRequests || latestRequests.length === 0) {
+        setDisplayedRequests([]);
         setEncouragementCounts({});
         setPrayerCounts({});
-        setDisplayedRequests([]);
         setHasMore(false);
         setLastRefreshTime(Date.now());
         return;
       }
 
-      // Update local state instead of relying on Redux
+      // Set displayed requests to first page
       setDisplayedRequests(latestRequests);
-      setCurrentOffset(ITEMS_PER_PAGE);
+      setCurrentPage(1);
       setHasMore(latestRequests.length === ITEMS_PER_PAGE);
 
       // Detect newly added prayers using navigation param and array comparison
@@ -203,104 +205,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     setPrayerCounts(prev => ({...prev, ...newPrayerCounts}));
   };
 
-  // Load more requests for endless scroll
-  const loadMoreRequests = React.useCallback(async () => {
-    if (loadingMore || !hasMore || loading) {
-      return; // Also check global loading state
-    }
-    
-    setLoadingMore(true);
-    
-    try {
-      // Fetch next page from server
-      const result = await dispatch(fetchPrayerRequests({
-        limit: ITEMS_PER_PAGE,
-        offset: currentOffset
-      })).unwrap();
-      
-      const newRequests = result.data;
-      
-      if (!newRequests || newRequests.length === 0) {
-        setHasMore(false);
-        setLoadingMore(false);
-        return;
-      }
 
-      // Don't animate pagination cards - they should just appear normally
-
-      // Update local state by appending new requests
-      setDisplayedRequests(prev => [...prev, ...newRequests]);
-      setCurrentOffset(prev => prev + newRequests.length);
-      setHasMore(newRequests.length === ITEMS_PER_PAGE);
-      
-      // Load counts asynchronously
-      setTimeout(() => {
-        loadCountsForRequests(newRequests);
-      }, 0);
-      
-    } catch (error) {
-      console.error('Error loading more requests:', error);
-      setHasMore(false);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [loadingMore, hasMore, currentOffset, dispatch, loading]);
-
-  // Handle scroll to load more and update header
+  // Handle scroll to update header
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
       useNativeDriver: false,
       listener: (event: any) => {
         const offsetY = event.nativeEvent.contentOffset.y;
-        currentScrollPosition.current = offsetY; // Track current position
-        
         const opacity = Math.max(0, Math.min(1, 1 - offsetY / 100));
         headerOpacity.setValue(opacity);
-        
-        // Also check for endless scroll on regular scroll events
-        handleScrollEndReached(event);
       },
     }
   );
 
-  // Improved scroll detection with better threshold and debouncing
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const lastLoadTimeRef = useRef<number>(0);
-  
-  const handleScrollEndReached = React.useCallback((event: any) => {
-    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
-    const paddingToBottom = 200; // Increased threshold for smoother loading
-    
-    // Check if we're near the bottom
-    const isNearBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-    
-    // Prevent rapid successive loads by checking time since last load
-    const now = Date.now();
-    const timeSinceLastLoad = now - lastLoadTimeRef.current;
-    
-    if (isNearBottom && !loadingMore && hasMore && timeSinceLastLoad > 500) {
-      // Clear any existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      // Debounce the load more request for smoother scrolling
-      scrollTimeoutRef.current = setTimeout(() => {
-        lastLoadTimeRef.current = Date.now();
-        loadMoreRequests();
-      }, 100); // Slightly increased delay to prevent rapid firing
-    }
-  }, [loadingMore, hasMore, loadMoreRequests]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Direct refresh function that bypasses Redux caching
   const forceRefreshCounts = async () => {
@@ -349,16 +267,49 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     }
   };
 
+  // Facebook-style load more function
+  const loadMoreRequests = React.useCallback(async () => {
+    if (loadingMore || !hasMore) {
+      return;
+    }
+    
+    setLoadingMore(true);
+    
+    try {
+      const result = await dispatch(fetchPrayerRequests({
+        limit: ITEMS_PER_PAGE,
+        offset: currentPage * ITEMS_PER_PAGE
+      })).unwrap();
+      
+      const newRequests = result.data;
+      
+      if (!newRequests || newRequests.length === 0) {
+        setHasMore(false);
+      } else {
+        // Append new requests to existing list
+        setDisplayedRequests(prev => [...prev, ...newRequests]);
+        setCurrentPage(prev => prev + 1);
+        setHasMore(newRequests.length === ITEMS_PER_PAGE);
+        
+        // Load counts for new requests
+        await loadCountsForRequests(newRequests);
+      }
+    } catch (error) {
+      console.error('Error loading more requests:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, currentPage, dispatch]);
+  
   // Use useFocusEffect to always fetch fresh data (but avoid over-fetching)
   useFocusEffect(
     React.useCallback(() => {
       // Only load if we don't have data or if enough time has passed
-      // Also prevent interference with endless scroll loading
       const timeSinceLastRefresh = Date.now() - lastRefreshTime;
-      if (displayedRequests.length === 0 || (timeSinceLastRefresh > 5000 && !loadingMore)) {
+      if (displayedRequests.length === 0 || timeSinceLastRefresh > 5000) {
         loadInitialRequests();
       }
-    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime, loadingMore])
+    }, [loadInitialRequests, displayedRequests.length, lastRefreshTime])
   );
 
   // Additional navigation listener as backup
@@ -367,13 +318,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
       // Check if there's a newly created prayer to animate
       const newlyCreatedPrayerId = route?.params?.newlyCreatedPrayerId;
       
-      if (newlyCreatedPrayerId && !loadingMore) {
+      if (newlyCreatedPrayerId) {
         // Force a refresh to get the latest data and trigger animation
         setTimeout(() => {
           loadInitialRequests();
         }, 100);
-      } else if (!loadingMore) {
-        // Just refresh counts without full reload, but not during pagination
+      } else {
+        // Just refresh counts without full reload
         setTimeout(() => {
           forceRefreshCounts();
         }, 300);
@@ -381,7 +332,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
     });
 
     return unsubscribe;
-  }, [navigation, route?.params?.newlyCreatedPrayerId, loadInitialRequests, loadingMore]);
+  }, [navigation, route?.params?.newlyCreatedPrayerId, loadInitialRequests]);
 
   // Listen for Redux refresh triggers
   useEffect(() => {
@@ -546,29 +497,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
             {/* Prayer Requests Section */}
             <View style={styles.prayerRequestsContainer}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Recent Prayer Requests</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Pressable style={styles.seeAllButton}>
-                    <Text style={styles.seeAllText}>See All</Text>
-                    <Icon
-                      name="arrow-forward"
-                      size={16}
-                      color={theme.colors.textOnDark}
-                    />
-                  </Pressable>
-                </View>
+                <Text style={styles.sectionTitle}>Prayer Requests</Text>
               </View>
 
 
               {displayedRequests.length > 0 ? (
-                <>
-                  {displayedRequests.map((request, index) => {
+                <FlatList
+                  data={displayedRequests}
+                  keyExtractor={(item) => `prayer-${item.id}`}
+                  renderItem={({ item: request, index }) => {
                     const isNewlyAdded = newlyAddedCards.has(request.id);
                     const hasNewCardAbove = displayedRequests.slice(0, index).some(req => newlyAddedCards.has(req.id));
                     
                     return (
                       <AnimatedPrayerCard
-                        key={`prayer-${request.id}`}
                         index={index}
                         isNew={false}
                         isNewlyAdded={isNewlyAdded}
@@ -602,17 +544,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         }}
                       />
                     );
-                  })}
-                  
-                  {/* Skeleton Loading for endless scroll */}
-                  {loadingMore && (
-                    <>
-                      <PrayerCardSkeleton />
-                      <PrayerCardSkeleton />
-                      <PrayerCardSkeleton />
-                    </>
-                  )}
-                </>
+                  }}
+                  onEndReached={loadMoreRequests}
+                  onEndReachedThreshold={0.3}
+                  ListFooterComponent={() => {
+                    if (loadingMore) {
+                      return (
+                        <View style={styles.loadingMore}>
+                          <PrayerCardSkeleton />
+                          <PrayerCardSkeleton />
+                        </View>
+                      );
+                    }
+                    return null;
+                  }}
+                  scrollEnabled={false}
+                  nestedScrollEnabled={false}
+                  style={styles.flatList}
+                />
               ) : loading ? (
                 // Show skeletons during initial load
                 <>
@@ -632,33 +581,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
               )}
             </View>
 
-            {/* Community Suggestions */}
-            <View style={styles.communityContainer}>
-              <Text style={styles.sectionTitle}>Suggested Communities</Text>
-              <GlassCard variant="elevated" style={styles.communityCard}>
-                <LinearGradient
-                  colors={gradients.peace}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.communityBanner}
-                >
-                  <Icon name="groups" size={32} color={theme.colors.textOnDark} />
-                </LinearGradient>
-                <View style={styles.communityContent}>
-                  <Text style={styles.communityTitle}>Local Faith Community</Text>
-                  <Text style={styles.communityDescription}>
-                    Join 127 members in your area for prayer and support
-                  </Text>
-                  <GradientButton
-                    title="Join Community"
-                    onPress={() => navigation.navigate('CommunitiesTab')}
-                    variant="peace"
-                    size="small"
-                    style={styles.joinButton}
-                  />
-                </View>
-              </GlassCard>
-            </View>
 
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
@@ -789,17 +711,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
 
-  seeAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  seeAllText: {
-    fontSize: 14,
-    color: theme.colors.textOnDark,
-    fontWeight: '500',
-    marginRight: spacing.xs,
-  },
 
 
   bottomSpacing: {
@@ -827,43 +738,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Community
-  communityContainer: {
-    marginBottom: spacing.xl,
+  // FlatList styles
+  flatList: {
+    flex: 1,
   },
 
-  communityCard: {
-    marginHorizontal: spacing.lg,
-    overflow: 'hidden',
+  loadingMore: {
+    paddingVertical: spacing.md,
   },
 
-  communityBanner: {
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  communityContent: {
-    padding: spacing.lg,
-  },
-
-  communityTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: spacing.sm,
-  },
-
-  communityDescription: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-
-  joinButton: {
-    alignSelf: 'flex-start',
-  },
 });
 
 export default HomeScreen;
