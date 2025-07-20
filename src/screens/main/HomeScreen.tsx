@@ -42,14 +42,18 @@ import {
   gradients,
   shadows,
   animations,
+  layout,
 } from '@/theme';
 import { RootState, AppDispatch } from '@/store';
 import { fetchPrayerRequests } from '@/store/slices/prayerSlice';
 import PrayerCard from '@/components/PrayerCard';
+import ModernPrayerCard from '@/components/ModernPrayerCard';
 import AnimatedPrayerCard from '@/components/AnimatedPrayerCard';
 import PrayerCardSkeleton from '@/components/PrayerCardSkeleton';
 import GlassCard from '@/components/GlassCard';
 import GradientButton from '@/components/GradientButton';
+import ModernHeader from '@/components/ModernHeader';
+import QuickActionsBar from '@/components/QuickActionsBar';
 import { getEncouragementCount, getPrayerCount } from '@/services/prayerService';
 import { useFocusEffect } from '@react-navigation/native';
 import { store } from '@/store';
@@ -426,120 +430,105 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
   const quickActions = [
     {
+      id: '1',
       icon: 'add-circle',
       title: 'New Request',
       subtitle: 'Share your prayer',
-      gradient: gradients.spiritual,
+      gradient: 'spiritual' as keyof typeof gradients,
       onPress: () => navigation.navigate('CreatePrayerRequest'),
     },
     {
+      id: '2',
       icon: 'explore',
       title: 'Explore',
       subtitle: 'Find communities',
-      gradient: gradients.peace,
+      gradient: 'peace' as keyof typeof gradients,
       onPress: () => navigation.navigate('CommunitiesTab'),
     },
     {
+      id: '3',
       icon: 'map',
       title: 'Nearby',
       subtitle: 'Local prayers',
-      gradient: gradients.sunrise,
+      gradient: 'sunrise' as keyof typeof gradients,
       onPress: () => navigation.navigate('MapTab'),
     },
   ];
 
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar
-        barStyle="light-content"
+        barStyle="dark-content"
         backgroundColor="transparent"
         translucent
       />
-      <LinearGradient
-        colors={gradients.sunset}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.container}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          {/* Facebook-style Animated Header */}
-          <Animated.View style={[styles.header, { 
-            transform: [{ translateY: headerTranslateY }],
-          }]}>
-            <View style={styles.headerContent}>
-              <Text style={styles.appName}>AMENITY</Text>
-              <Pressable 
-                style={styles.profileButton}
-                onPress={() => navigation.navigate('Profile')}
-              >
-                <Icon
-                  name="account-circle"
-                  size={32}
-                  color={theme.colors.textOnDark}
-                />
-              </Pressable>
-            </View>
-          </Animated.View>
+      
+      {/* Modern Header */}
+      <ModernHeader
+        title="Pray For Me"
+        subtitle={greeting}
+        onProfilePress={() => navigation.navigate('Profile')}
+        animated
+        animatedValue={headerTranslateY}
+        blur
+      />
 
-          {/* Scrollable Content */}
-          <Animated.ScrollView
-            ref={scrollViewRef}
-            style={[styles.scrollView, { paddingTop: headerHeight }]}
-            contentContainerStyle={styles.scrollContent}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={theme.colors.textOnDark}
-                colors={[theme.colors.primary]}
-                progressViewOffset={headerHeight}
-              />
-            }
-            showsVerticalScrollIndicator={false}
+      {/* Main Content */}
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+            progressViewOffset={layout.headerHeight + 20}
+          />
+        }
+        showsVerticalScrollIndicator={false}
           >
-            {/* Quick Actions */}
-            <View style={styles.quickActionsContainer}>
-              <Text style={styles.sectionTitle}>Quick Actions</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.quickActions}
+            {/* Welcome Section */}
+            <View style={styles.welcomeSection}>
+              <GlassCard
+                variant="glass"
+                size="lg"
+                borderRadius="xxl"
+                shadow="glass"
+                gradient="backgroundGradient"
+                style={styles.welcomeCard}
               >
-                {quickActions.map((action, index) => (
-                  <Pressable
-                    key={index}
-                    onPress={action.onPress}
-                    style={styles.quickActionCard}
-                  >
-                    <GlassCard
-                      variant="filled"
-                      style={styles.quickActionContent}
-                    >
-                      <LinearGradient
-                        colors={action.gradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.quickActionIcon}
-                      >
-                        <Icon
-                          name={action.icon}
-                          size={24}
-                          color={theme.colors.textOnDark}
-                        />
-                      </LinearGradient>
-                      <Text style={styles.quickActionTitle}>
-                        {action.title}
+                <View style={styles.welcomeContent}>
+                  <Text style={styles.greetingText}>
+                    {greeting}, {user?.email?.split('@')[0] || 'Friend'}
+                  </Text>
+                  <Text style={styles.welcomeMessage}>
+                    Join our community in prayer and support
+                  </Text>
+                  <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>
+                        {displayedRequests.length}
                       </Text>
-                      <Text style={styles.quickActionSubtitle}>
-                        {action.subtitle}
+                      <Text style={styles.statLabel}>Active Prayers</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                      <Text style={styles.statNumber}>
+                        {Object.values(prayerCounts).reduce((a, b) => a + b, 0)}
                       </Text>
-                    </GlassCard>
-                  </Pressable>
-                ))}
-              </ScrollView>
+                      <Text style={styles.statLabel}>Total Prayers</Text>
+                    </View>
+                  </View>
+                </View>
+              </GlassCard>
             </View>
+
+            {/* Quick Actions */}
+            <QuickActionsBar actions={quickActions} />
 
             {/* Prayer Requests Section */}
             <View style={styles.prayerRequestsContainer}>
@@ -555,12 +544,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                     const hasNewCardAbove = displayedRequests.slice(0, index).some(req => newlyAddedCards.has(req.id));
                     
                     return (
-                      <AnimatedPrayerCard
+                      <ModernPrayerCard
                         key={`prayer-${request.id}`}
-                        index={index}
-                        isNew={false}
-                        isNewlyAdded={isNewlyAdded}
-                        isPushedDown={hasNewCardAbove}
                         id={request.id}
                         title={request.title}
                         description={request.description}
@@ -623,122 +608,87 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
 
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
-          </Animated.ScrollView>
-        </SafeAreaView>
-      </LinearGradient>
-    </>
+          </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
 
-  safeArea: {
-    flex: 1,
-  },
-
-  // Header
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    height: 120,
-    backgroundColor: '#9D4EDD',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    justifyContent: 'flex-end',
-  },
-
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  appName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.textOnDark,
-    flex: 1,
-    textAlign: 'left',
-  },
-
-  profileButton: {
-    padding: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Scroll Content
   scrollView: {
     flex: 1,
+    paddingTop: layout.headerHeight + 20,
   },
 
   scrollContent: {
     paddingBottom: spacing.massive,
   },
 
-  // Quick Actions
-  quickActionsContainer: {
-    marginTop: spacing.lg,
-    marginBottom: spacing.xl,
+  // Welcome Section
+  welcomeSection: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
   },
 
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.textOnDark,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+  welcomeCard: {
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
   },
 
-  quickActions: {
-    paddingHorizontal: spacing.lg,
+  welcomeContent: {
+    padding: spacing.lg,
   },
 
-  quickActionCard: {
-    marginRight: spacing.md,
-  },
-
-  quickActionContent: {
-    width: 120,
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.glassStrong,
-  },
-
-  quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-
-  quickActionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textOnDark,
-    textAlign: 'center',
+  greetingText: {
+    ...theme.fonts.title2,
+    color: theme.colors.text,
     marginBottom: spacing.xs,
   },
 
-  quickActionSubtitle: {
-    fontSize: 12,
-    color: theme.colors.textOnDark,
-    opacity: 0.7,
-    textAlign: 'center',
+  welcomeMessage: {
+    ...theme.fonts.body,
+    color: theme.colors.textSecondary,
+    marginBottom: spacing.lg,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+
+  statNumber: {
+    ...theme.fonts.title1,
+    color: theme.colors.primary,
+    fontWeight: '700',
+  },
+
+  statLabel: {
+    ...theme.fonts.caption1,
+    color: theme.colors.textTertiary,
+    marginTop: spacing.xxs,
+  },
+
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: theme.colors.borderLight,
+    marginHorizontal: spacing.md,
   },
 
   // Prayer Requests
   prayerRequestsContainer: {
+    paddingHorizontal: spacing.md,
     marginBottom: spacing.xl,
   },
 
@@ -746,11 +696,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
-
+  sectionTitle: {
+    ...theme.fonts.title3,
+    color: theme.colors.text,
+  },
 
   bottomSpacing: {
     height: spacing.massive,
@@ -764,16 +716,14 @@ const styles = StyleSheet.create({
   },
 
   emptyStateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.textOnDark,
+    ...theme.fonts.headline,
+    color: theme.colors.text,
     marginBottom: spacing.xs,
   },
 
   emptyStateSubtext: {
-    fontSize: 14,
-    color: theme.colors.textOnDark,
-    opacity: 0.7,
+    ...theme.fonts.body,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
 

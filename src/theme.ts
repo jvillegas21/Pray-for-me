@@ -4,223 +4,387 @@ export const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    // Primary gradients inspired by top iOS apps
-    primary: '#6366F1', // Modern indigo
-    primaryLight: '#8B7CF6', // Light indigo
-    primaryDark: '#4F46E5', // Dark indigo
+    // Modern iOS-inspired primary colors
+    primary: '#007AFF', // iOS Blue
+    primaryLight: '#5AC8FA', // Light blue
+    primaryDark: '#0051D5', // Dark blue
+    primaryVariant: '#32D74B', // iOS Green
 
-    // Secondary spiritual colors
-    secondary: '#EC4899', // Vibrant pink
-    secondaryLight: '#F472B6', // Light pink
+    // Sophisticated secondary palette
+    secondary: '#FF3B30', // iOS Red
+    secondaryLight: '#FF6B6B', // Coral
+    secondaryDark: '#D70015', // Dark red
 
-    // Accent colors for highlights
-    accent: '#DC2626', // Warm amber
-    accentLight: '#fca5a5', // Light amber
+    // Accent colors for modern touches
+    accent: '#FF9500', // iOS Orange
+    accentLight: '#FFCC02', // Yellow
+    accentPurple: '#AF52DE', // iOS Purple
+    accentPink: '#FF2D92', // iOS Pink
 
-    // Modern background system
-    background: '#FAFBFF', // Very light blue-white
-    backgroundDark: '#0F0F23', // Deep dark blue
+    // Refined background system
+    background: '#F2F2F7', // iOS System Background
+    backgroundSecondary: '#FFFFFF', // Secondary background
+    backgroundTertiary: '#F2F2F7', // Tertiary background
+    backgroundGrouped: '#F2F2F7', // Grouped background
+    backgroundDark: '#000000', // Pure black for dark mode
 
-    // Surface colors with glassmorphism support
-    surface: '#FFFFFF', // Pure white
-    surfaceVariant: '#F1F5F9', // Light gray-blue
-    surfaceGlass: 'rgba(255, 255, 255, 0.8)', // Glassmorphism
-    surfaceDarkGlass: 'rgba(15, 15, 35, 0.8)', // Dark glassmorphism
+    // Advanced surface system with glassmorphism
+    surface: '#FFFFFF', // Primary surface
+    surfaceVariant: '#F2F2F7', // Variant surface
+    surfaceContainer: '#FFFFFF', // Container surface
+    surfaceGlass: 'rgba(255, 255, 255, 0.85)', // Glass effect
+    surfaceGlassLight: 'rgba(255, 255, 255, 0.6)', // Light glass
+    surfaceGlassStrong: 'rgba(255, 255, 255, 0.95)', // Strong glass
+    surfaceDarkGlass: 'rgba(0, 0, 0, 0.3)', // Dark glass overlay
 
-    // Text hierarchy
-    text: '#1E293B', // Rich dark
-    textSecondary: '#64748B', // Medium gray
-    textTertiary: '#94A3B8', // Light gray
-    textOnDark: '#F8FAFC', // Almost white
+    // Modern text hierarchy
+    text: '#000000', // Primary text
+    textSecondary: '#3C3C43', // Secondary text with 60% opacity
+    textTertiary: '#3C3C4399', // Tertiary text with 40% opacity
+    textQuaternary: '#3C3C4366', // Quaternary text with 30% opacity
+    textOnDark: '#FFFFFF', // Text on dark backgrounds
+    textLink: '#007AFF', // Link text
 
-    // Semantic colors
-    success: '#10B981', // Modern green
-    successLight: '#6EE7B7', // Light green
-    warning: '#F59E0B', // Amber
-    error: '#EF4444', // Modern red
-    errorLight: '#FCA5A5', // Light red
+    // Semantic colors with iOS system colors
+    success: '#32D74B', // iOS Green
+    successLight: '#30DB5B', // Light green
+    warning: '#FF9500', // iOS Orange
+    warningLight: '#FFAB00', // Light orange
+    error: '#FF3B30', // iOS Red
+    errorLight: '#FF453A', // Light red
 
-    // Special spiritual colors
-    spiritual: '#7C3AED', // Deep purple
-    spiritualLight: '#A78BFA', // Light purple
-    peace: '#06B6D4', // Peaceful cyan
-    hope: '#84CC16', // Hopeful green
+    // Spiritual and prayer-specific colors
+    spiritual: '#AF52DE', // Purple for spiritual content
+    spiritualLight: '#BF5AF2', // Light purple
+    peace: '#5AC8FA', // Peaceful blue
+    peaceLight: '#64D2FF', // Light peaceful blue
+    hope: '#32D74B', // Green for hope
+    love: '#FF2D92', // Pink for love
 
-    // Glass and transparency
-    glass: 'rgba(255, 255, 255, 0.25)',
+    // Advanced glass and transparency system
+    glass: 'rgba(255, 255, 255, 0.2)',
     glassStrong: 'rgba(255, 255, 255, 0.4)',
-    backdrop: 'rgba(0, 0, 0, 0.4)',
-    overlay: 'rgba(15, 15, 35, 0.6)',
+    glassUltra: 'rgba(255, 255, 255, 0.7)',
+    backdrop: 'rgba(0, 0, 0, 0.3)',
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    overlayLight: 'rgba(0, 0, 0, 0.1)',
 
     // Interactive states
-    ripple: 'rgba(99, 102, 241, 0.2)',
-    pressed: 'rgba(99, 102, 241, 0.1)',
-    disabled: '#E2E8F0',
+    ripple: 'rgba(0, 122, 255, 0.15)',
+    pressed: 'rgba(0, 122, 255, 0.1)',
+    disabled: '#8E8E93',
+    placeholder: '#C7C7CC',
 
-    // Notification colors
-    notification: '#EC4899',
+    // Border colors
+    border: 'rgba(60, 60, 67, 0.13)',
+    borderLight: 'rgba(60, 60, 67, 0.06)',
+    borderStrong: 'rgba(60, 60, 67, 0.25)',
+
+    // Fill colors for modern iOS buttons
+    fillPrimary: '#007AFF',
+    fillSecondary: 'rgba(120, 120, 128, 0.2)',
+    fillTertiary: 'rgba(118, 118, 128, 0.12)',
+    fillQuaternary: 'rgba(116, 116, 128, 0.08)',
+
+    // Notification and status colors
+    notification: '#FF3B30',
   },
 
-  // Enhanced typography system
+  // Enhanced typography system based on iOS Human Interface Guidelines
   fonts: {
     ...DefaultTheme.fonts,
-    // Display fonts for headings
-    displayLarge: {
+    // Large Title (iOS Style)
+    largeTitle: {
       fontFamily: 'SF Pro Display',
       fontWeight: '700',
-      fontSize: 32,
-      lineHeight: 40,
-    },
-    displayMedium: {
-      fontFamily: 'SF Pro Display',
-      fontWeight: '600',
-      fontSize: 28,
-      lineHeight: 36,
-    },
-    displaySmall: {
-      fontFamily: 'SF Pro Display',
-      fontWeight: '600',
-      fontSize: 24,
-      lineHeight: 32,
+      fontSize: 34,
+      lineHeight: 41,
+      letterSpacing: 0.36,
     },
 
-    // Headline fonts
-    headlineLarge: {
-      fontFamily: 'SF Pro Text',
+    // Title styles
+    title1: {
+      fontFamily: 'SF Pro Display',
+      fontWeight: '700',
+      fontSize: 28,
+      lineHeight: 34,
+      letterSpacing: 0.36,
+    },
+    title2: {
+      fontFamily: 'SF Pro Display',
       fontWeight: '600',
       fontSize: 22,
       lineHeight: 28,
+      letterSpacing: 0.35,
     },
-    headlineMedium: {
-      fontFamily: 'SF Pro Text',
+    title3: {
+      fontFamily: 'SF Pro Display',
       fontWeight: '600',
       fontSize: 20,
-      lineHeight: 26,
+      lineHeight: 24,
+      letterSpacing: 0.38,
     },
-    headlineSmall: {
+
+    // Headline styles
+    headline: {
       fontFamily: 'SF Pro Text',
       fontWeight: '600',
-      fontSize: 18,
-      lineHeight: 24,
+      fontSize: 17,
+      lineHeight: 22,
+      letterSpacing: -0.43,
     },
 
-    // Body fonts
-    bodyLarge: {
+    // Body styles
+    body: {
       fontFamily: 'SF Pro Text',
-      fontWeight: 'normal',
+      fontWeight: '400',
+      fontSize: 17,
+      lineHeight: 22,
+      letterSpacing: -0.43,
+    },
+    bodyEmphasized: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '600',
+      fontSize: 17,
+      lineHeight: 22,
+      letterSpacing: -0.43,
+    },
+
+    // Callout styles
+    callout: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '400',
       fontSize: 16,
-      lineHeight: 24,
+      lineHeight: 21,
+      letterSpacing: -0.32,
     },
-    bodyMedium: {
+    calloutEmphasized: {
       fontFamily: 'SF Pro Text',
-      fontWeight: 'normal',
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    bodySmall: {
-      fontFamily: 'SF Pro Text',
-      fontWeight: 'normal',
-      fontSize: 12,
-      lineHeight: 16,
+      fontWeight: '600',
+      fontSize: 16,
+      lineHeight: 21,
+      letterSpacing: -0.32,
     },
 
-    // Label fonts
-    labelLarge: {
+    // Subhead styles
+    subhead: {
       fontFamily: 'SF Pro Text',
-      fontWeight: '500',
-      fontSize: 14,
+      fontWeight: '400',
+      fontSize: 15,
       lineHeight: 20,
+      letterSpacing: -0.24,
     },
-    labelMedium: {
+    subheadEmphasized: {
       fontFamily: 'SF Pro Text',
-      fontWeight: '500',
+      fontWeight: '600',
+      fontSize: 15,
+      lineHeight: 20,
+      letterSpacing: -0.24,
+    },
+
+    // Footnote styles
+    footnote: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '400',
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: -0.08,
+    },
+    footnoteEmphasized: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '600',
+      fontSize: 13,
+      lineHeight: 18,
+      letterSpacing: -0.08,
+    },
+
+    // Caption styles
+    caption1: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '400',
       fontSize: 12,
       lineHeight: 16,
+      letterSpacing: 0,
     },
-    labelSmall: {
+    caption1Emphasized: {
       fontFamily: 'SF Pro Text',
-      fontWeight: '500',
-      fontSize: 10,
-      lineHeight: 14,
+      fontWeight: '600',
+      fontSize: 12,
+      lineHeight: 16,
+      letterSpacing: 0,
+    },
+    caption2: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '400',
+      fontSize: 11,
+      lineHeight: 13,
+      letterSpacing: 0.07,
+    },
+    caption2Emphasized: {
+      fontFamily: 'SF Pro Text',
+      fontWeight: '600',
+      fontSize: 11,
+      lineHeight: 13,
+      letterSpacing: 0.07,
     },
   },
 };
 
-// Enhanced spacing system
+// Modern iOS spacing system
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
-  huge: 40,
-  massive: 48,
+  xxxs: 2,
+  xxs: 4,
+  xs: 8,
+  sm: 12,
+  md: 16,
+  lg: 20,
+  xl: 24,
+  xxl: 32,
+  xxxl: 40,
+  huge: 48,
+  massive: 64,
+  giant: 80,
 };
 
-// Modern border radius system
+// iOS-inspired border radius system
 export const borderRadius = {
+  none: 0,
   xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
+  sm: 6,
+  md: 8,
+  lg: 10,
+  xl: 12,
+  xxl: 16,
+  xxxl: 20,
+  huge: 24,
   rounded: 999,
 };
 
-// Shadow system for depth
+// Enhanced shadow system for depth and glassmorphism
 export const shadows = {
-  small: {
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
     elevation: 1,
   },
-  medium: {
+  md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
-  large: {
+  xl: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
     elevation: 8,
   },
   glass: {
-    shadowColor: '#6366F1',
+    shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 6,
   },
-};
-
-// Gradient definitions
-export const gradients = {
-  primary: ['#6366F1', '#8B7CF6'],
-  secondary: ['#EC4899', '#F472B6'],
-  spiritual: ['#7C3AED', '#A78BFA'],
-  peace: ['#06B6D4', '#67E8F9'],
-  sunrise: ['#F59E0B', '#FCD34D'],
-  sunset: ['#EC4899', '#7C3AED'],
-  glass: ['rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.1)'],
-  darkGlass: ['rgba(15, 15, 35, 0.8)', 'rgba(15, 15, 35, 0.4)'],
-};
-
-// Animation timings
-export const animations = {
-  fast: 150,
-  normal: 250,
-  slow: 350,
-  spring: {
-    damping: 15,
-    stiffness: 150,
+  glassStrong: {
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
+  coloredGlass: {
+    shadowColor: '#AF52DE',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+};
+
+// Modern gradient system with iOS-inspired colors
+export const gradients = {
+  primary: ['#007AFF', '#5AC8FA'],
+  secondary: ['#FF3B30', '#FF6B6B'],
+  spiritual: ['#AF52DE', '#BF5AF2'],
+  peace: ['#5AC8FA', '#64D2FF'],
+  love: ['#FF2D92', '#FF6B6B'],
+  hope: ['#32D74B', '#30DB5B'],
+  sunrise: ['#FF9500', '#FFCC02'],
+  sunset: ['#FF6B6B', '#AF52DE'],
+  ocean: ['#5AC8FA', '#007AFF'],
+  forest: ['#32D74B', '#30DB5B'],
+  glass: ['rgba(255, 255, 255, 0.8)', 'rgba(255, 255, 255, 0.3)'],
+  glassStrong: ['rgba(255, 255, 255, 0.95)', 'rgba(255, 255, 255, 0.6)'],
+  darkGlass: ['rgba(0, 0, 0, 0.6)', 'rgba(0, 0, 0, 0.2)'],
+  backgroundGradient: ['#F2F2F7', '#FFFFFF'],
+  cardGradient: ['rgba(255, 255, 255, 0.9)', 'rgba(255, 255, 255, 0.7)'],
+};
+
+// Advanced animation system
+export const animations = {
+  fastest: 100,
+  fast: 200,
+  normal: 300,
+  slow: 400,
+  slowest: 500,
+  spring: {
+    damping: 20,
+    stiffness: 200,
+    mass: 1,
+  },
+  springBouncy: {
+    damping: 10,
+    stiffness: 100,
+    mass: 1,
+  },
+  springGentle: {
+    damping: 25,
+    stiffness: 250,
+    mass: 1,
+  },
+  easing: {
+    easeInOut: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+    easeOut: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
+    easeIn: 'cubic-bezier(0.4, 0.0, 1, 1)',
+  },
+};
+
+// Layout constants
+export const layout = {
+  headerHeight: 44,
+  tabBarHeight: 83,
+  safeAreaTop: 47,
+  safeAreaBottom: 34,
+  screenPadding: spacing.md,
+  cardSpacing: spacing.sm,
+  sectionSpacing: spacing.lg,
+};
+
+// Modern opacity system
+export const opacity = {
+  disabled: 0.3,
+  overlay: 0.5,
+  subtle: 0.6,
+  medium: 0.8,
+  strong: 0.9,
+  opaque: 1.0,
 };
