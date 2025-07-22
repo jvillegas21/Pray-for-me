@@ -1,92 +1,158 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { BlurView } from '@react-native-community/blur';
-import { theme, shadows, borderRadius, spacing } from '@/theme';
+import LinearGradient from 'react-native-linear-gradient';
+import { theme, shadows, borderRadius, spacing, gradients, opacity } from '@/theme';
 
 interface GlassCardProps {
   children: React.ReactNode;
   style?: ViewStyle;
-  blurType?: 'light' | 'dark' | 'regular';
+  blurType?: 'xlight' | 'light' | 'dark' | 'regular' | 'prominent' | 'systemUltraThin' | 'systemThin' | 'systemMaterial';
   blurAmount?: number;
   intensity?: number;
-  variant?: 'elevated' | 'outlined' | 'filled';
-  size?: 'small' | 'medium' | 'large';
+  variant?: 'elevated' | 'outlined' | 'filled' | 'glass' | 'glassStrong' | 'minimal';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  borderRadius?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'rounded';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'glass' | 'glassStrong' | 'coloredGlass';
+  gradient?: keyof typeof gradients;
+  borderWidth?: number;
+  borderColor?: string;
+  backgroundColor?: string;
+  overflow?: 'visible' | 'hidden';
 }
 
 const GlassCard: React.FC<GlassCardProps> = ({
   children,
   style,
-  blurType = 'light',
-  blurAmount = 10,
-  intensity = 50,
-  variant = 'elevated',
-  size = 'medium',
+  blurType = 'systemMaterial',
+  blurAmount = 25,
+  intensity = 100,
+  variant = 'glass',
+  size = 'md',
+  borderRadius: borderRadiusProp = 'lg',
+  shadow = 'glass',
+  gradient,
+  borderWidth,
+  borderColor,
+  backgroundColor,
+  overflow = 'hidden',
 }) => {
-  const cardStyle = [styles.container, styles[size], styles[variant], style];
+  const containerStyle = [
+    styles.container,
+    styles[size],
+    styles[variant],
+    shadow !== 'none' && shadows[shadow],
+    {
+      borderRadius: borderRadius[borderRadiusProp],
+      overflow,
+    },
+    borderWidth && { borderWidth },
+    borderColor && { borderColor },
+    backgroundColor && { backgroundColor },
+    style,
+  ];
 
-  if (Platform.OS === 'ios') {
+  const contentStyle = [
+    styles.content,
+    {
+      borderRadius: borderRadius[borderRadiusProp],
+    },
+  ];
+
+  // iOS Blur Effect
+  if (Platform.OS === 'ios' && (variant === 'glass' || variant === 'glassStrong')) {
     return (
       <BlurView
-        style={cardStyle}
+        style={containerStyle}
         blurType={blurType}
         blurAmount={blurAmount}
         reducedTransparencyFallbackColor={theme.colors.surface}
       >
-        <View style={styles.content}>{children}</View>
+        {gradient && (
+          <LinearGradient
+            colors={gradients[gradient]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[StyleSheet.absoluteFillObject, { opacity: 0.1 }]}
+          />
+        )}
+        <View style={contentStyle}>{children}</View>
       </BlurView>
     );
   }
 
-  // Android fallback with custom glass effect
+  // Standard card with optional gradient
   return (
-    <View style={[cardStyle, styles.androidGlass]}>
-      <View style={styles.content}>{children}</View>
+    <View style={containerStyle}>
+      {gradient && (
+        <LinearGradient
+          colors={gradients[gradient]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { opacity: variant === 'filled' ? 1 : 0.1 },
+            { borderRadius: borderRadius[borderRadiusProp] },
+          ]}
+        />
+      )}
+      <View style={contentStyle}>{children}</View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: theme.colors.glass,
+    position: 'relative',
   },
 
   // Size variants
-  small: {
+  xs: {
+    padding: spacing.xs,
+  },
+  sm: {
+    padding: spacing.sm,
+  },
+  md: {
     padding: spacing.md,
   },
-  medium: {
+  lg: {
     padding: spacing.lg,
   },
-  large: {
+  xl: {
     padding: spacing.xl,
   },
 
   // Style variants
   elevated: {
-    ...shadows.glass,
-    backgroundColor: theme.colors.surfaceGlass,
+    backgroundColor: theme.colors.surface,
   },
   outlined: {
-    borderColor: theme.colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: theme.colors.glass,
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+    backgroundColor: theme.colors.surface,
   },
   filled: {
-    backgroundColor: theme.colors.glassStrong,
-    ...shadows.medium,
+    backgroundColor: theme.colors.surface,
   },
-
-  // Android glass fallback
-  androidGlass: {
+  glass: {
     backgroundColor: theme.colors.surfaceGlass,
-    backdropFilter: 'blur(10px)',
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+  },
+  glassStrong: {
+    backgroundColor: theme.colors.surfaceGlassStrong,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  minimal: {
+    backgroundColor: 'transparent',
   },
 
   content: {
     flex: 1,
+    position: 'relative',
+    zIndex: 1,
   },
 });
 
