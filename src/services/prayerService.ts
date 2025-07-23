@@ -105,7 +105,7 @@ export const prayerService = {
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, name, avatar_url')
+              .select('id, name, avatar_url, avatar_color')
               .eq('id', request.user_id)
               .single();
 
@@ -131,7 +131,7 @@ export const prayerService = {
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
-                      .select('id, name, avatar_url')
+                      .select('id, name, avatar_url, avatar_color')
                       .eq('id', response.user_id)
                       .single();
 
@@ -145,7 +145,8 @@ export const prayerService = {
                     user: responseUserProfile || {
                       id: response.user_id,
                       name: 'Unknown User',
-                      avatar_url: null,
+                      avatar_url: undefined,
+                      avatar_color: undefined,
                     },
                   };
                 })
@@ -173,7 +174,8 @@ export const prayerService = {
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
-              avatar_url: null,
+              avatar_url: undefined,
+              avatar_color: undefined,
             },
           };
         })
@@ -231,7 +233,7 @@ export const prayerService = {
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, name, avatar_url')
+              .select('id, name, avatar_url, avatar_color')
               .eq('id', request.user_id)
               .single();
 
@@ -256,7 +258,7 @@ export const prayerService = {
                   try {
                     const { data: profile } = await supabase
                       .from('profiles')
-                      .select('id, name, avatar_url')
+                      .select('id, name, avatar_url, avatar_color')
                       .eq('id', response.user_id)
                       .single();
 
@@ -270,7 +272,8 @@ export const prayerService = {
                     user: responseUserProfile || {
                       id: response.user_id,
                       name: 'Unknown User',
-                      avatar_url: null,
+                      avatar_url: undefined,
+                      avatar_color: undefined,
                     },
                   };
                 })
@@ -298,7 +301,8 @@ export const prayerService = {
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
-              avatar_url: null,
+              avatar_url: undefined,
+              avatar_color: undefined,
             },
           };
         })
@@ -476,7 +480,7 @@ export const prayerService = {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, name, avatar_url')
+          .select('id, name, avatar_url, avatar_color')
           .eq('id', data.user_id)
           .single();
 
@@ -501,7 +505,7 @@ export const prayerService = {
               try {
                 const { data: profile } = await supabase
                   .from('profiles')
-                  .select('id, name, avatar_url')
+                  .select('id, name, avatar_url, avatar_color')
                   .eq('id', response.user_id)
                   .single();
 
@@ -515,7 +519,8 @@ export const prayerService = {
                 user: responseUserProfile || {
                   id: response.user_id,
                   name: 'Unknown User',
-                  avatar_url: null,
+                  avatar_url: undefined,
+                  avatar_color: undefined,
                 },
               };
             })
@@ -542,7 +547,8 @@ export const prayerService = {
         user: userProfile || {
           id: data.user_id,
           name: 'Unknown User',
-          avatar_url: null,
+          avatar_url: undefined,
+          avatar_color: undefined,
         },
         responses,
       };
@@ -608,7 +614,7 @@ export const prayerService = {
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, name, avatar_url')
+              .select('id, name, avatar_url, avatar_color')
               .eq('id', request.user_id)
               .single();
 
@@ -622,7 +628,8 @@ export const prayerService = {
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
-              avatar_url: null,
+              avatar_url: undefined,
+              avatar_color: undefined,
             },
             responses: [], // Simplified for category requests
           };
@@ -663,7 +670,7 @@ export const prayerService = {
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, name, avatar_url')
+              .select('id, name, avatar_url, avatar_color')
               .eq('id', request.user_id)
               .single();
 
@@ -677,7 +684,8 @@ export const prayerService = {
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
-              avatar_url: null,
+              avatar_url: undefined,
+              avatar_color: undefined,
             },
             responses: [], // Simplified for urgent requests
           };
@@ -756,7 +764,7 @@ export const prayerService = {
           try {
             const { data: profile } = await supabase
               .from('profiles')
-              .select('id, name, avatar_url')
+              .select('id, name, avatar_url, avatar_color')
               .eq('id', request.user_id)
               .single();
 
@@ -770,7 +778,8 @@ export const prayerService = {
             user: userProfile || {
               id: request.user_id,
               name: 'Unknown User',
-              avatar_url: null,
+              avatar_url: undefined,
+              avatar_color: undefined,
             },
             responses: [], // Simplified for location requests
           };
@@ -878,41 +887,58 @@ export const getEncouragements = async (prayerRequestId: string, sortNewestFirst
   try {
     const { data, error } = await supabase
       .from('encouragements')
-      .select(
-        `
-        *,
-        users!encouragements_user_id_fkey (
-          id,
-          email,
-          display_name
-        )
-      `
-      )
+      .select('*')
       .eq('prayer_request_id', prayerRequestId)
       .order('created_at', { ascending: !sortNewestFirst });
 
     if (error) {
-      // Error fetching encouragements:', error);
+      console.error('Error fetching encouragements:', error);
       return [];
     }
 
-    // Map database fields to camelCase to match the Encouragement interface
-    const mappedData = (data || []).map((encouragement: any) => ({
-      id: encouragement.id,
-      prayerRequestId: encouragement.prayer_request_id,
-      userId: encouragement.user_id,
-      message: encouragement.message,
-      createdAt: encouragement.created_at,
-      isAnonymous: encouragement.is_anonymous,
-      moderationStatus: encouragement.moderation_status,
-      flaggedBy: encouragement.flagged_by,
-      flaggedReason: encouragement.flagged_reason,
-      user: encouragement.users
-    }));
+    if (!data || data.length === 0) {
+      return [];
+    }
 
-    return mappedData;
+    // For each encouragement, fetch the user profile separately
+    const encouragementsWithUsers = await Promise.all(
+      data.map(async (encouragement: any) => {
+        let userProfile = null;
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url, avatar_color')
+            .eq('id', encouragement.user_id)
+            .single();
+
+          userProfile = profile;
+        } catch (profileError) {
+          console.log('Could not fetch profile for user:', encouragement.user_id);
+        }
+
+        return {
+          id: encouragement.id,
+          prayerRequestId: encouragement.prayer_request_id,
+          userId: encouragement.user_id,
+          message: encouragement.message,
+          createdAt: encouragement.created_at,
+          isAnonymous: encouragement.is_anonymous,
+          moderationStatus: encouragement.moderation_status,
+          flaggedBy: encouragement.flagged_by,
+          flaggedReason: encouragement.flagged_reason,
+          user: userProfile || {
+            id: encouragement.user_id,
+            name: 'Unknown User',
+            avatar_url: undefined,
+            avatar_color: undefined,
+          },
+        };
+      })
+    );
+
+    return encouragementsWithUsers;
   } catch (error: any) {
-    // Error in getEncouragements:', error);
+    console.error('Error in getEncouragements:', error);
     return [];
   }
 };

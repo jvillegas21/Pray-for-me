@@ -3,11 +3,12 @@ import { AuthState, User } from '@/types';
 import { authService, AuthUser, AuthResponse } from '@/services/authService';
 
 // Helper function to convert AuthUser to User
-const convertAuthUserToUser = (authUser: AuthUser): User => ({
+const convertAuthUserToUser = (authUser: any): User => ({
   id: authUser.id,
   email: authUser.email,
   name: authUser.name,
   avatar: authUser.avatar_url,
+  avatar_color: authUser.avatar_color, // <-- Add this line
   privacySettings: {
     shareLocation: false,
     allowAnonymous: true,

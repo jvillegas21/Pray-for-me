@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Encouragement } from '@/types';
 import LottieView from 'lottie-react-native';
+import UserAvatar from '@/components/UserAvatar';
 import {
   getRequestById,
   getEncouragements,
@@ -46,6 +47,12 @@ const formatNumber = (num: number): string => {
     return k % 1 === 0 ? `${k}k` : `${k.toFixed(1)}k`;
   }
   return num.toString();
+};
+
+// Helper to get first name from full name
+const getFirstName = (fullName?: string): string => {
+  if (!fullName) return 'User';
+  return fullName.trim().split(' ')[0];
 };
 
 const PrayerRequestScreen: React.FC = () => {
@@ -297,7 +304,12 @@ const PrayerRequestScreen: React.FC = () => {
       style={{ flex: 1, backgroundColor: theme.colors.background }}
       edges={['top', 'left', 'right']}
     >
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.screenContainer}>
+        <ScrollView 
+          style={styles.container} 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -314,8 +326,34 @@ const PrayerRequestScreen: React.FC = () => {
 
         {/* Prayer Content */}
         <View style={[styles.card, shadows.medium]}>
-          <View style={styles.prayerHeader}>
-            <View style={styles.categoryContainer}>
+          {/* Social Media Style Header */}
+          <View style={styles.socialHeader}>
+            <UserAvatar
+              name={prayerRequest.user?.name}
+              isAnonymous={prayerRequest.isAnonymous}
+              backgroundColor={prayerRequest.user?.avatar_color}
+              size="medium"
+            />
+            <View style={styles.userInfo}>
+              <View style={styles.userNameRow}>
+                <Text style={styles.userName}>
+                  {prayerRequest.isAnonymous ? 'Anonymous' : getFirstName(prayerRequest.user?.name)}
+                </Text>
+                {prayerRequest.status === 'answered' && (
+                  <View style={styles.answeredBadgeInline}>
+                    <Icon
+                      name="check-circle"
+                      size={14}
+                      color={theme.colors.success}
+                      style={{ marginRight: 2 }}
+                    />
+                    <Text style={styles.answeredBadgeText}>Answered</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.timeAgoDetail}>{prayerRequest.timeAgo}</Text>
+            </View>
+            <View style={styles.categoryPillContainer}>
               <View
                 style={[
                   styles.categoryPill,
@@ -324,33 +362,19 @@ const PrayerRequestScreen: React.FC = () => {
               >
                 <Icon
                   name={getCategoryIcon()}
-                  size={16}
+                  size={12}
                   color={theme.colors.textOnDark}
                 />
-                <Text style={styles.categoryText}>
+                <Text style={styles.categoryTextSmall}>
                   {prayerRequest.category}
                 </Text>
               </View>
             </View>
           </View>
+          
+          {/* Prayer Content */}
           <View style={styles.content}>
-            <Text style={styles.title} numberOfLines={2}>
-              {prayerRequest.title}
-            </Text>
-            <View style={styles.timeAndUserRow}>
-              <Icon
-                name={prayerRequest.isAnonymous ? 'visibility-off' : 'person'}
-                size={13}
-                color={theme.colors.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.userInlineText}>
-                {prayerRequest.isAnonymous ? 'Anonymous' : 'User'}
-              </Text>
-              <Text style={styles.bullet}> • </Text>
-              <Text style={styles.timeAgoInline}>{prayerRequest.timeAgo}</Text>
-            </View>
-            <Text style={styles.description}>{prayerRequest.description}</Text>
+            <Text style={styles.prayerText}>{prayerRequest.description}</Text>
           </View>
           {/* Answered Status Banner */}
           {prayerRequest.status === 'answered' && (
@@ -371,7 +395,7 @@ const PrayerRequestScreen: React.FC = () => {
                 <LottieView
                   ref={heartAnimationRef as any}
                   source={require('../../../assets/encouragementHeart.json')}
-                  style={{ width: 24, height: 24, marginRight: 2 }}
+                  style={{ width: 40, height: 40, marginRight: 2 }}
                   loop={false}
                   autoPlay={false}
                 />
@@ -383,7 +407,7 @@ const PrayerRequestScreen: React.FC = () => {
             <View style={styles.fbFooterAction} pointerEvents="none">
               <Icon
                 name="people"
-                size={18}
+                size={24}
                 color={theme.colors.primary}
                 style={{ marginRight: 2 }}
               />
@@ -399,7 +423,7 @@ const PrayerRequestScreen: React.FC = () => {
             >
               <Icon
                 name="volunteer-activism"
-                size={18}
+                size={24}
                 color={
                   hasPrayed ? theme.colors.disabled : theme.colors.textSecondary
                 }
@@ -464,78 +488,89 @@ const PrayerRequestScreen: React.FC = () => {
           ) : (
             encouragements.map((enc) => (
               <View key={enc.id} style={styles.encouragementItem}>
-                <Text style={styles.encouragementMessage}>{enc.message}</Text>
-                <View style={styles.encouragementMeta}>
-                  <Text style={styles.encouragementAuthor}>
-                    {enc.isAnonymous ? 'Anonymous' : enc.userId} •{' '}
-                    {(() => {
-                      const dateStr = enc.createdAt;
-                      const date = dateStr ? new Date(dateStr) : null;
-                      
-                      if (!date || isNaN(date.getTime())) {
-                        return 'Unknown date';
-                      }
-                      
-                      const now = new Date();
-                      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-                      
-                      if (diffInMinutes < 1) {
-                        return 'Just now';
-                      } else if (diffInMinutes < 60) {
-                        return `${diffInMinutes}m ago`;
-                      } else if (diffInMinutes < 1440) { // Less than 24 hours
-                        const hours = Math.floor(diffInMinutes / 60);
-                        return `${hours}h ago`;
-                      } else if (diffInMinutes < 10080) { // Less than 7 days
-                        const days = Math.floor(diffInMinutes / 1440);
-                        return `${days}d ago`;
-                      } else {
-                        return date.toLocaleDateString();
-                      }
-                    })()}
-                  </Text>
+                <View style={styles.encouragementHeader}>
+                  <UserAvatar
+                    name={enc.user?.name}
+                    isAnonymous={enc.isAnonymous}
+                    backgroundColor={enc.user?.avatar_color}
+                    size="small"
+                  />
+                  <View style={styles.encouragementUserInfo}>
+                    <Text style={styles.encouragementAuthor}>
+                      {enc.isAnonymous ? 'Anonymous' : getFirstName(enc.user?.name)}
+                    </Text>
+                    <Text style={styles.encouragementTime}>
+                      {(() => {
+                        const dateStr = enc.createdAt;
+                        const date = dateStr ? new Date(dateStr) : null;
+                        
+                        if (!date || isNaN(date.getTime())) {
+                          return 'Unknown date';
+                        }
+                        
+                        const now = new Date();
+                        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+                        
+                        if (diffInMinutes < 1) {
+                          return 'Just now';
+                        } else if (diffInMinutes < 60) {
+                          return `${diffInMinutes}m ago`;
+                        } else if (diffInMinutes < 1440) { // Less than 24 hours
+                          const hours = Math.floor(diffInMinutes / 60);
+                          return `${hours}h ago`;
+                        } else if (diffInMinutes < 10080) { // Less than 7 days
+                          const days = Math.floor(diffInMinutes / 1440);
+                          return `${days}d ago`;
+                        } else {
+                          return date.toLocaleDateString();
+                        }
+                      })()}
+                    </Text>
+                  </View>
                   <TouchableOpacity onPress={() => handleReport(enc.id)}>
                     <Text style={styles.reportText}>Report</Text>
                   </TouchableOpacity>
                 </View>
+                <Text style={styles.encouragementMessage}>{enc.message}</Text>
               </View>
             ))
           )}
 
-          {/* Encouragement Form */}
-          <View style={styles.encouragementForm}>
-            <Text style={styles.formTitle}>Send Encouragement</Text>
+        </View>
+
+        <View style={styles.bottomSpacing} />
+        </ScrollView>
+
+        {/* Sticky Encouragement Input */}
+        <View style={styles.stickyInputContainer}>
+          <View style={styles.stickyInput}>
             <TextInput
-              style={styles.textArea}
-              placeholder="Share words of encouragement, prayer, or support..."
+              style={styles.stickyTextInput}
+              placeholder="Share words of encouragement..."
               placeholderTextColor={theme.colors.textTertiary}
               value={newEncouragement}
               onChangeText={setNewEncouragement}
               multiline
-              numberOfLines={4}
               maxLength={500}
               textAlignVertical="top"
             />
-            <View style={styles.formFooter}>
-              <Text style={styles.charCount}>
-                {newEncouragement.length}/500 characters
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  { opacity: submitting || !newEncouragement.trim() ? 0.5 : 1 },
-                ]}
-                onPress={handleEncouragementSubmit}
-                disabled={submitting || !newEncouragement.trim()}
-              >
-                <Text style={styles.sendButtonText}>Send Encouragement</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[
+                styles.stickySendButton,
+                { opacity: submitting || !newEncouragement.trim() ? 0.5 : 1 },
+              ]}
+              onPress={handleEncouragementSubmit}
+              disabled={submitting || !newEncouragement.trim()}
+            >
+              <Icon 
+                name="send" 
+                size={20} 
+                color={theme.colors.textOnDark}
+              />
+            </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
+      </View>
       
       {/* Celebration Animation */}
       <AnsweredPrayerCelebration
@@ -673,17 +708,86 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: spacing.md,
   },
+  // Social media style header for prayer detail
+  socialHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    marginRight: spacing.sm,
+  },
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginRight: spacing.sm,
+  },
+  timeAgoDetail: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    fontWeight: '400',
+  },
+  categoryPillContainer: {
+    alignSelf: 'flex-start',
+  },
+  categoryTextSmall: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.colors.textOnDark,
+    marginLeft: spacing.xs,
+    textTransform: 'capitalize',
+  },
+  answeredBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.success,
+  },
+  answeredBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.colors.success,
+  },
+  prayerText: {
+    fontSize: 16,
+    color: theme.colors.text,
+    lineHeight: 24,
+  },
+
+  // Encouragement styles
   encouragementItem: {
     marginBottom: spacing.md,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surfaceVariant,
+    borderBottomColor: theme.colors.divider,
+  },
+  encouragementHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.xs,
+  },
+  encouragementUserInfo: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    marginRight: spacing.sm,
   },
   encouragementMessage: {
-    fontSize: 16,
+    fontSize: 15,
     color: theme.colors.text,
-    lineHeight: 22,
-    marginBottom: spacing.xs,
+    lineHeight: 20,
+    marginLeft: 40, // Align with avatar + margin
   },
   encouragementMeta: {
     flexDirection: 'row',
@@ -691,6 +795,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   encouragementAuthor: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  encouragementTime: {
     fontSize: 12,
     color: theme.colors.textSecondary,
   },
@@ -750,6 +860,59 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: spacing.xl,
   },
+
+  // New styles for sticky input
+  screenContainer: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingBottom: 100, // Space for sticky input + safe area
+  },
+
+  stickyInputContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: theme.colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.divider,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingBottom: spacing.lg, // Extra padding to account for safe area
+    ...shadows.medium,
+  },
+
+  stickyInput: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    backgroundColor: theme.colors.surfaceVariant,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minHeight: 44,
+  },
+
+  stickyTextInput: {
+    flex: 1,
+    fontSize: 14,
+    color: theme.colors.text,
+    backgroundColor: 'transparent',
+    maxHeight: 100,
+    paddingVertical: spacing.xs,
+    marginRight: spacing.sm,
+  },
+
+  stickySendButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: borderRadius.rounded,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.small,
+  },
   content: {
     marginBottom: spacing.md,
   },
@@ -774,9 +937,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginTop: spacing.md,
-    paddingTop: spacing.md,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.surfaceVariant,
+    borderTopColor: theme.colors.divider,
   },
   fbFooterAction: {
     flexDirection: 'row',

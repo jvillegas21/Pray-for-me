@@ -14,6 +14,7 @@ import {
 } from '@/theme';
 import { PrayerCategory } from '@/types';
 import GlassCard from './GlassCard';
+import UserAvatar from './UserAvatar';
 import {
   addPrayerAction,
   getEncouragementCount,
@@ -30,6 +31,12 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
+// Helper to get first name from full name
+const getFirstName = (fullName?: string): string => {
+  if (!fullName) return 'User';
+  return fullName.trim().split(' ')[0];
+};
+
 interface PrayerCardProps {
   id: string; // Prayer request ID
   title: string;
@@ -42,6 +49,8 @@ interface PrayerCardProps {
   prayerCount?: number;
   isAnonymous: boolean;
   status?: 'active' | 'answered' | 'closed';
+  userName?: string;
+  userAvatarColor?: string;
   onPress: () => void;
   onSupport: () => void;
   onShare: () => void;
@@ -62,6 +71,8 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
   prayerCount = 0,
   isAnonymous,
   status = 'active',
+  userName,
+  userAvatarColor,
   onPress,
   onSupport,
   onShare,
@@ -223,9 +234,34 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
           onPressOut={handlePressOut}
           style={styles.cardContent}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.categoryContainer}>
+          {/* Header - Social Media Style */}
+          <View style={styles.socialHeader}>
+            <UserAvatar
+              name={userName}
+              isAnonymous={isAnonymous}
+              backgroundColor={userAvatarColor}
+              size="medium"
+            />
+            <View style={styles.userInfo}>
+              <View style={styles.userNameRow}>
+                <Text style={styles.userName}>
+                  {isAnonymous ? 'Anonymous' : getFirstName(userName)}
+                </Text>
+                {status === 'answered' && (
+                  <View style={styles.answeredBadge}>
+                    <Icon
+                      name="check-circle"
+                      size={14}
+                      color={theme.colors.success}
+                      style={{ marginRight: 2 }}
+                    />
+                    <Text style={styles.answeredBadgeText}>Answered</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.timeAgo}>{timeAgo}</Text>
+            </View>
+            <View style={styles.categoryPillSmall}>
               <View
                 style={[
                   styles.categoryPill,
@@ -234,46 +270,17 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
               >
                 <Icon
                   name={getCategoryIcon()}
-                  size={16}
+                  size={12}
                   color={theme.colors.textOnDark}
                 />
-                <Text style={styles.categoryText}>{category}</Text>
+                <Text style={styles.categoryTextSmall}>{category}</Text>
               </View>
-              
-              {/* Answered Status Badge */}
-              {status === 'answered' && (
-                <View style={styles.answeredBadge}>
-                  <Icon
-                    name="check-circle"
-                    size={16}
-                    color={theme.colors.success}
-                    style={{ marginRight: 4 }}
-                  />
-                  <Text style={styles.answeredBadgeText}>Answered</Text>
-                </View>
-              )}
             </View>
           </View>
 
           {/* Content */}
           <View style={styles.content}>
-            <Text style={styles.title} numberOfLines={2}>
-              {title}
-            </Text>
-            <View style={styles.timeAndUserRow}>
-              <Icon
-                name={isAnonymous ? 'visibility-off' : 'person'}
-                size={13}
-                color={theme.colors.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.userInlineText}>
-                {isAnonymous ? 'Anonymous' : 'User'}
-              </Text>
-              <Text style={styles.bullet}> • </Text>
-              <Text style={styles.timeAgoInline}>{timeAgo}</Text>
-            </View>
-            <Text style={styles.description} numberOfLines={3}>
+            <Text style={styles.description} numberOfLines={4}>
               {description}
             </Text>
           </View>
@@ -285,7 +292,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
                 <LottieView
                   ref={heartAnimationRef as any}
                   source={require('../../assets/encouragementHeart.json')}
-                  style={{ width: 36, height: 36, marginRight: 2 }}
+                  style={{ width: 40, height: 40, marginRight: 2 }}
                   loop={false}
                   autoPlay={false}
                 />
@@ -303,7 +310,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
             >
               <Icon
                 name="people"
-                size={18}
+                size={24}
                 color={theme.colors.primary}
                 style={{ marginRight: 2 }}
               />
@@ -319,7 +326,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
             >
               <Icon
                 name="volunteer-activism"
-                size={18}
+                size={24}
                 color={
                   prayed ? theme.colors.disabled : theme.colors.textSecondary
                 }
@@ -344,7 +351,7 @@ const PrayerCard: React.FC<PrayerCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   card: {
@@ -354,6 +361,42 @@ const styles = StyleSheet.create({
 
   cardContent: {
     padding: spacing.lg,
+  },
+
+  // Social media style header
+  socialHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+  },
+
+  userInfo: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    marginRight: spacing.sm,
+  },
+
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+
+  userName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginRight: spacing.sm,
+  },
+
+  timeAgo: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
+    fontWeight: '400',
+  },
+
+  categoryPillSmall: {
+    alignSelf: 'flex-start',
   },
 
   header: {
@@ -386,6 +429,14 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
 
+  categoryTextSmall: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.colors.textOnDark,
+    marginLeft: spacing.xs,
+    textTransform: 'capitalize',
+  },
+
   anonymousBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -406,15 +457,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#E8F5E8',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.rounded,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
     borderWidth: 1,
     borderColor: theme.colors.success,
   },
 
   answeredBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: theme.colors.success,
   },
@@ -426,7 +477,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
 
   title: {
@@ -438,9 +489,9 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    lineHeight: 20,
+    fontSize: 15,
+    color: theme.colors.text,
+    lineHeight: 22,
   },
 
   footer: {
@@ -516,10 +567,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB', // subtle light gray
-    paddingTop: spacing.lg,
+    borderTopColor: theme.colors.divider,
+    paddingTop: spacing.sm,
     marginTop: spacing.sm,
-    marginBottom: 0,
+    marginBottom: -spacing.sm,
   },
   fbFooterAction: {
     flexDirection: 'row',

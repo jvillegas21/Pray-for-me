@@ -576,6 +576,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
                         encouragementCount={encouragementCounts[request.id] ?? 0}
                         prayerCount={prayerCounts[request.id] ?? 0}
                         isAnonymous={request.isAnonymous}
+                        userName={request.user?.name}
+                        userAvatarColor={request.user?.avatar_color}
                         onPress={() =>
                           navigation.navigate('PrayerRequest', {
                             requestId: request.id,

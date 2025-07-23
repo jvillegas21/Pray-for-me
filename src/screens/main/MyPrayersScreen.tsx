@@ -26,6 +26,7 @@ const MyPrayersScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   
   const { myRequests, loading } = useSelector((state: RootState) => state.prayer);
+  const { user } = useSelector((state: RootState) => state.auth);
   const filter = route.params?.filter || 'all';
 
   useEffect(() => {
@@ -73,6 +74,8 @@ const MyPrayersScreen: React.FC = () => {
       encouragementCount={item.encouragements?.length || 0}
       prayerCount={0}
       isAnonymous={item.isAnonymous}
+      userName={user?.name}
+      userAvatarColor={user?.avatar_color}
       onPress={() => navigation.navigate('PrayerRequest' as never, { requestId: item.id })}
       onSupport={() => {}}
       onShare={() => {}}
