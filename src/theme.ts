@@ -57,6 +57,10 @@ export const theme = {
     pressed: 'rgba(99, 102, 241, 0.1)',
     disabled: '#E2E8F0',
 
+    // Divider colors - slightly darker for better visibility
+    divider: '#E2E8F0', // Light gray-blue, just a smidge darker than original
+    dividerLight: '#F1F5F9', // Very light divider for subtle separation
+
     // Notification colors
     notification: '#EC4899',
   },

@@ -23,6 +23,7 @@ import { getCurrentLocation, requestLocationPermission } from '@/store/slices/lo
 import GlassCard from '@/components/GlassCard';
 import GradientButton from '@/components/GradientButton';
 import { Button, Dialog, Portal, Paragraph } from 'react-native-paper';
+import UserAvatar from '@/components/UserAvatar';
 
 interface ProfileMenuItem {
   title: string;
@@ -289,11 +290,11 @@ const ProfileScreen: React.FC = () => {
         style={styles.profileHeaderGradient}
       >
         <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
-            </Text>
-          </View>
+          <UserAvatar
+            name={user?.name}
+            backgroundColor={user?.avatar_color}
+            size="large"
+          />
         </View>
         <Text style={styles.userName}>{user?.name || 'User'}</Text>
         <Text style={styles.userEmail}>{user?.email}</Text>

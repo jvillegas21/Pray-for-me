@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  avatar_color?: string;
   denomination?: string;
   bio?: string;
   location?: {
@@ -147,6 +148,7 @@ export type NavigationProps = {
   PrayerRequest: { requestId?: string };
   CreatePrayerRequest: undefined;
   Profile: { userId?: string };
+  EditProfile: undefined;
   Communities: undefined;
   CommunityDetail: { communityId: string };
   Settings: undefined;

@@ -16,6 +16,7 @@ import { PrayerRequestResultsScreen } from '@/screens/main/PrayerRequestResultsS
 import CommunityDetailScreen from '@/screens/main/CommunityDetailScreen';
 import SettingsScreen from '@/screens/main/SettingsScreen';
 import MyPrayersScreen from '@/screens/main/MyPrayersScreen';
+import EditProfileScreen from '@/screens/main/EditProfileScreen';
 
 const Tab = createBottomTabNavigator<NavigationProps>();
 const Stack = createNativeStackNavigator<NavigationProps>();
@@ -49,6 +50,7 @@ const CommunitiesStack = () => (
 const ProfileStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="EditProfile" component={EditProfileScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
     <Stack.Screen name="MyPrayers" component={MyPrayersScreen} />
   </Stack.Navigator>
